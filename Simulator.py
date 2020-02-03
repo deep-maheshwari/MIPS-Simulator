@@ -1,4 +1,7 @@
 # Simulator for phase 1
 def parse():
-    string text = input().split(" ")
-    
+    text = input().split(" ")
+    for st in text:
+        print(st)
+        
+parse()
