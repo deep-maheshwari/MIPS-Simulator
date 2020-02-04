@@ -1,16 +1,17 @@
 def parse():
-    text = "add $s1, $s2, $s3"
+    text = input()
 
-    result = [x.split() for x in text.split(",")]
+    result = text.split()
+
+    parsed = []
+
     for st in result:
-        print(st)
+        
+        st = st.split(",")
+        for x in st:
+            if(x):
+                parsed.append(x)
 
-    
-
-    if(result[0][0] == "add"):
-        r1 = add(r2, r3)
+    print(parsed)
 
 parse()
-
-def add(r2, r3):
-    return r2 + r3
