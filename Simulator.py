@@ -3,9 +3,11 @@ instructions = ["add","sub","lw","sw","bne"]
 registers = ['s1','s2','s3','s4','s5','s6','s7']
 def fileHandler(filename):
     file = open(filename,'r')
+    result = []
     for line in file.readlines():
-        print(line)
-    
+        result.append(line)
+    return result
+
 def parse(text):
     raw = []
 
@@ -21,6 +23,5 @@ def parse(text):
 
     print(parsed)
 
-fileHandler("C:/Users/Admin/Desktop/programming/Assembly/question6.s")
     
     
