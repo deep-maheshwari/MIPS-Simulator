@@ -1,7 +1,17 @@
 def parse():
-    text = input().split(" ")
+    text = input()
 
-    for st in text:
-        print(st)
+    result = text.split()
+
+    parsed = []
+
+    for st in result:
+        
+        st = st.split(",")
+        for x in st:
+            if(x):
+                parsed.append(x)
+
+    print(parsed)
 
 parse()
