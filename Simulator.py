@@ -9,19 +9,30 @@ def fileHandler(filename):
     return result
 
 def parse(text):
-    raw = []
 
-    for st in text:
-        raw.append(st.split(","))
+    result = text.split()
 
     parsed = []
 
-    for item in raw:
-        for st in item:
-            if(st):
-                parsed.append(st)
+    for st in result:
+        
+        st = st.split(",")
+        for x in st:
+            if(x):
+                parsed.append(x)
 
-    print(parsed)
+    return parsed
 
     
-    
+def read_instructions(instructions):
+    parsed_list = []
+    for ins in instructions:
+        if(parse(ins)):
+            parsed_list.append(parse(ins))
+
+    for items in parsed_list:
+        print(items)
+        
+read_instructions(fileHandler("C:/Users/Admin/Desktop/programming/Assembly/bubble_sort.asm"))
+
+#print(parse("add $s1, $s2, $s3"))
