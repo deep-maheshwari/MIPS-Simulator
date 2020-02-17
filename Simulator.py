@@ -1,7 +1,10 @@
 # Simulator for phase 1
 instructions = ["add","sub","lw","sw","bne"]
 registers = ['s1','s2','s3','s4','s5','s6','s7']
+base_address = 10010000
+
 def fileHandler(filename):
+
     file = open(filename,'r')
     result = []
     for line in file.readlines():
@@ -11,7 +14,6 @@ def fileHandler(filename):
 def parse(text):
 
     result = text.split()
-
     parsed = []
 
     for st in result:
@@ -25,14 +27,38 @@ def parse(text):
 
     
 def read_instructions(instructions):
+
     parsed_list = []
     for ins in instructions:
         if(parse(ins)):
             parsed_list.append(parse(ins))
 
-    for items in parsed_list:
-        print(items)
-        
-read_instructions(fileHandler("C:/Users/Admin/Desktop/programming/Assembly/bubble_sort.asm"))
+    return parsed_list
+
+instructions = read_instructions(fileHandler("C:/Users/Admin/Desktop/programming/Assembly/bubble_sort.asm"))
+data_and_text = {'data':[],'main':[],}
+
+pos_data = 0
+pos_main = 0
+
+data_labels = []
+main_labels = []
+
+for i in range(len(instructions)):
+    
+    if(instructions[i][0]=='.data'):
+        pos_data = i
+    elif(instructions[i][0]=='main:'):
+        pos_main = i
+
+for i in range(pos_data+1,pos_main):
+
+    if(instructions[i][0]!='.text' and instructions[i][0]!='.globl'):
+        data_and_text['data'].append(instructions[i])
+
+for i in range(pos_main+1,len(instructions)):
+        data_and_text['main'].append(instructions[i])
+
+print(data_and_text['main'])
 
 #print(parse("add $s1, $s2, $s3"))
