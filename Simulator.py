@@ -57,8 +57,41 @@ for i in range(pos_data+1,pos_main):
         data_and_text['data'].append(instructions[i])
 
 for i in range(pos_main+1,len(instructions)):
-        data_and_text['main'].append(instructions[i])
+    data_and_text['main'].append(instructions[i])
 
-print(data_and_text['main'])
+pos_of_label = []
+
+for dat in data_and_text['data']:
+    if(len(dat)==1):
+        data_labels.append(dat[0])
+        pos_of_label.append(data_and_text['data'].index(dat))
+
+data = {}
+
+for label in data_labels:
+    data[label] = []
+
+count = 0
+
+for label in data.keys():
+    for elm in data_and_text['data'][pos_of_label[count]+1]:
+        if(elm!='.word'):
+            data[label].append(elm)
+
+data['no_label'] = []
+
+for i in range(pos_of_label[len(pos_of_label)-1]+2,len(data_and_text['data'])):
+    data['no_label'].append(data_and_text['data'][i][1])
+
+main = {}
+
+for ins in data_and_text['main']:
+    if(len(ins)==1):
+        main[ins[0]] = data_and_text['main'].index(ins)
+    
+print(main)
+
+
+
 
 #print(parse("add $s1, $s2, $s3"))
