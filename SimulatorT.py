@@ -70,6 +70,7 @@ def registers():
         print("R" + count + " [" + i + "]: " + register["'" + i + "'"])   #check if it works
         count = count + 1
     
+    reg = {"r0":, "at":, "v0":, "v1":, "a0":, "a1":, "a2":, "a3",: "t0":, "t1":, "t2":, "t3":, "t4":, "t5":, "t6":, "t7":,"s0":, "s1":, "s2":, "s3": ,"s4": ,"s5":, "s6":, "s7":, "t8":, "t9":, "k0":, "k1":, "gp":, "sp":, "s8":, "ra":}
 
 def data(data):
     print("User Data Segment [10000000]..[10040000]")
