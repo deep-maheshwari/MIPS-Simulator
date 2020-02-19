@@ -227,7 +227,7 @@ def read_instructions(instructions):
 
     return parsed_list
 
-instructions = read_instructions(fileHandler("/home/tapish/CO/bub_sort.asm"))
+instructions = read_instructions(fileHandler("C:/Users/Admin/Desktop/programming/Assembly/bubble_sort.asm"))
 data_and_text = {'data':[],'main':[],}
 
 pos_data = 0
@@ -293,18 +293,63 @@ for ins in data_and_text['main']:
 # print(main)
 print(reg)
 print(data['.word'])
+
+print('1.Run file')
+print('2.Run file step by step')
+
+print('Choose one of the above option')
+
+option = int(input())
+
+if(option==1):
+
+    while(PC!=len(data_and_text['main'])-1):
+
+        PC = run_instruction(data_and_text['main'][PC],PC)
+
+        if(PC>len(data_and_text['main'])):
+            print("Unexpected error occured.")
+            break
+    
+    for register in reg.keys():
+        print(register+": "+str(reg[register]))
+
+    for i in range(len(data['.word'])):
+        print(hex((base_address+4*i))+": "+str(data['.word'][i]))
+    
 # print(parse("add $s1, $s2, $s3"))
 #print(len(data_and_text['main']))
-while(PC!=len(data_and_text['main'])-1):
 
-    PC = run_instruction(data_and_text['main'][PC],PC)
-    print(PC)
+elif(option==2):
 
-    if(PC>len(data_and_text['main'])):
-        print("Unexpected error occured.")
-        break
-    
+    print('1.Run command\n2.Show registers\n3.Show Memory\n4.exit')
 
+    int_option = int(input())
+
+    while(True):
+
+        if(int_option==1):
+            PC = run_instruction(data_and_text['main'][PC],PC)
+
+        elif(int_option==2):
+            for register in reg.keys():
+                    print(register+": "+str(reg[register]))
+
+        elif(int_option==3):
+            for i in range(len(data['.word'])):
+                print(hex((base_address+4*i))+": "+str(data['.word'][i]))
+        
+        elif(int_option==4):
+            break
+
+        if(PC>len(data_and_text['main'])):
+            print("Unexpected error occured.")
+            break   
+        
+        print('1.Run command\n2.Show registers\n3.Show Memory\n4.exit')
+
+        int_option = int(input())
+        
 # ['lui', '$s0', '0x1001']
 # ['lw', '$t1', '44($s0)']
 # ['lw', '$t3', '52($s0)']
@@ -330,5 +375,5 @@ while(PC!=len(data_and_text['main'])-1):
 # ['bne', '$t4', '$t1', 'big_while']
 # ['jr', '$ra']
 
-print(reg)
-print(data['.word'])
+# print(reg)
+# print(data['.word'])
