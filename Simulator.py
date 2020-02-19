@@ -227,7 +227,7 @@ def read_instructions(instructions):
 
     return parsed_list
 
-instructions = read_instructions(fileHandler("C:/Users/Admin/Desktop/programming/Assembly/bubble_sort.asm"))
+instructions = read_instructions(fileHandler("/home/tapish/CO/Project_Phase 1/COproj_phase1/trial.asm"))
 data_and_text = {'data':[],'main':[],}
 
 pos_data = 0
