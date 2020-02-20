@@ -17,7 +17,7 @@ main = {}
 app = Tk()
 
 app.title('DTSpim')
-app.geometry('1000x800')
+app.geometry('1400x1000')
 
 app.filename = ""
 
@@ -228,7 +228,8 @@ def run_file():
     ic_list.delete(0, END)
     ic_list.insert(END, 'Data Segment')
     ic_list.insert(END, '')
-    ic_list.insert(END, str(data['.word']))
+    for i in range(len(data['.word'])):
+        ic_list.insert(END, hex((base_address+4*i))+": "+str(data['.word'][i]))
     ic_list.insert(END, '')
     ic_list.insert(END, '')
     ic_list.insert(END, 'Text Segment')
@@ -337,7 +338,8 @@ def loadfile(filename):
     ic_list.delete(0, END)
     ic_list.insert(END, 'Data Segment')
     ic_list.insert(END, '')
-    ic_list.insert(END, str(data['.word']))
+    for i in range(len(data['.word'])):
+        ic_list.insert(END, hex((base_address+4*i))+": "+str(data['.word'][i]))
     ic_list.insert(END, '')
     ic_list.insert(END, '')
     ic_list.insert(END, 'Text Segment')
@@ -347,18 +349,66 @@ def loadfile(filename):
         ic_list.insert(END, '')
     ic_list.insert(END, '')
 
+def reinit():
+    reg_list.delete(0, END)
+    PC = 0
+    for register in reg:
+        reg[register] = 0
+    reg_list.insert(END, '%-10s %s'%('PC:', str(PC)))
+    reg_list.insert(END, '')
+    reg_list.insert(END, '')
+    reg_list.insert(END, '')
+    reg_list.insert(END, '')
+    for register in reg:
+        if(register != 'zero'):
+            reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(reg[register])))
+        else:
+            reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(reg[register])))
+        
+    reg_list.insert(END, '')
+
+    ic_list.delete(0, END)
+    ic_list.insert(END, 'Data Segment')
+    ic_list.insert(END, '')
+    ic_list.insert(END, '')
+    ic_list.insert(END, 'Text Segment')
+    ic_list.insert(END, '')
+    ic_list.insert(END, '')
+
+def int_console():
+    console = Tk()
+    console.title('Interactive Console')
+    console.geometry('800x600')
+    instructs = StringVar()
+    arrows = Label(console, text = '>>')
+    arrows.grid(row = 0, column = 0, sticky = W)
+    entry = Entry(console, textvariable = instructs)
+    entry.grid(row = 0, column = 1, columnspan = 5)
+    print(instructs)
+
+def run_sbs():
+    PC = run_instruction(data_and_text['main'][PC],PC)
+    highlight = ic_list.get(data_and_text['main'][PC])
+    highlight = Text(app, highlightcolor = 'Blue')
+
+
+
 #Buttons
 load_btn = Button(app, text = 'Load File', width = 18, command = addressfetch)
-load_btn.grid(row = 0, column = 0, pady = 20)
+load_btn.grid(row = 0, column = 0, pady = 20, padx = 5)
+#Buttons
+ri_btn = Button(app, text = 'Reinitialize', width = 18, command = reinit)
+ri_btn.grid(row = 0, column = 1, pady = 20, padx = 5)
 #Buttons
 run_btn = Button(app, text = 'Run File', width = 18, command = run_file)
-run_btn.grid(row = 0, column = 1, pady = 20)
+run_btn.grid(row = 0, column = 2, pady = 20, padx = 5)
 #Buttons
-sbs_btn = Button(app, text = 'Run File Step-by-Step', width = 18, command = time_pass)
-sbs_btn.grid(row = 0, column = 2, pady = 20)
+sbs_btn = Button(app, text = 'Run File Step-by-Step', width = 18, command = run_sbs)
+sbs_btn.grid(row = 0, column = 3, pady = 20, padx = 5)
 #Buttons
-ic_btn = Button(app, text = 'Open Interactive Console', width = 18, command = time_pass)
-ic_btn.grid(row = 0, column = 3, pady = 20)
+ic_btn = Button(app, text = 'Open Interactive Console', width = 18, command = int_console)
+ic_btn.grid(row = 0, column = 4, pady = 20, padx = 5)
+
 
 #ListBox
 reg_list = Listbox(app, height = 100, width = 20)
@@ -376,8 +426,8 @@ for register in reg:
     
 reg_list.insert(END, '')
 # ListBox
-ic_list = Listbox(app, height = 100, width = 80)
-ic_list.grid(row = 1, column = 1, pady = 20, padx = 20, columnspan = 3, rowspan = 6)
+ic_list = Listbox(app, height = 100, width = 120)
+ic_list.grid(row = 1, column = 1, pady = 20, padx = 20, columnspan = 4, rowspan = 6)
 ic_list.insert(END, 'Data Segment')
 ic_list.insert(END, '')
 ic_list.insert(END, '')
@@ -385,5 +435,12 @@ ic_list.insert(END, 'Text Segment')
 ic_list.insert(END, '')
 ic_list.insert(END, '')
 
+#ScrollBar
+scrollbar = Scrollbar(app)
+scrollbar.grid(row = 1, column = 6)
+
+#Set Scrollbar to listbox
+ic_list.config(yscrollcommand = scrollbar.set)
+scrollbar.config(command = ic_list.yview)
 
 app.mainloop()
