@@ -18,6 +18,8 @@ app = Tk()
 
 app.title('DTSpim')
 app.geometry('1400x1000')
+frame = Frame(app)
+frame.grid(sticky = 'nwes')
 
 app.filename = ""
 
@@ -240,7 +242,7 @@ def run_file():
     ic_list.insert(END, '')
 
 def time_pass():
-    print('It works for now!!!')
+    print('Ohh! you want to open settings...')
 
 def addressfetch():
     app.filename = filedialog.askopenfilename(initialdir = '/CO', title = 'Select a File', filetypes = (('asm files', '*.asm'), ('s files', '*.s')))
@@ -386,28 +388,59 @@ def int_console():
     entry.grid(row = 0, column = 1, columnspan = 5)
     print(instructs)
 
-def run_sbs():
+def run_sbs(PC):
+    print(PC)
+    # print(data_and_text['main'][0])
     PC = run_instruction(data_and_text['main'][PC],PC)
-    highlight = ic_list.get(data_and_text['main'][PC])
-    highlight = Text(app, highlightcolor = 'Blue')
+    # highlight = ic_list.get(data_and_text['main'][PC])
+    # highlight = Text(app, highlightcolor = 'Red')
+    reg_list.delete(0, END)
+    reg_list.insert(END, '%-10s %s'%('PC:', str(PC)))
+    reg_list.insert(END, '')
+    reg_list.insert(END, '')
+    reg_list.insert(END, '')
+    reg_list.insert(END, '')
+    for register in reg:
+        if(register != 'zero'):
+            reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(reg[register])))
+        else:
+            reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(reg[register])))
+        
+    reg_list.insert(END, '')
+
+    ic_list.delete(0, END)
+    ic_list.insert(END, 'Data Segment')
+    ic_list.insert(END, '')
+    for i in range(len(data['.word'])):
+        ic_list.insert(END, hex((base_address+4*i))+": "+str(data['.word'][i]))
+    ic_list.insert(END, '')
+    ic_list.insert(END, '')
+    ic_list.insert(END, 'Text Segment')
+    ic_list.insert(END, '')
+    for i in data_and_text['main']:
+        ic_list.insert(END, str(i))
+        ic_list.insert(END, '')
+    ic_list.insert(END, '')
+
+def close_window():
+    app.destroy()
 
 
-
 #Buttons
-load_btn = Button(app, text = 'Load File', width = 18, command = addressfetch)
-load_btn.grid(row = 0, column = 0, pady = 20, padx = 5)
+# load_btn = Button(app, text = 'Load File', width = 18, command = addressfetch)
+# load_btn.grid(row = 0, column = 0, pady = 20, padx = 5)
 #Buttons
-ri_btn = Button(app, text = 'Reinitialize', width = 18, command = reinit)
-ri_btn.grid(row = 0, column = 1, pady = 20, padx = 5)
+# ri_btn = Button(app, text = 'Reinitialize', width = 18, command = reinit)
+# ri_btn.grid(row = 0, column = 1, pady = 20, padx = 5)
 #Buttons
-run_btn = Button(app, text = 'Run File', width = 18, command = run_file)
-run_btn.grid(row = 0, column = 2, pady = 20, padx = 5)
+# run_btn = Button(app, text = 'Run File', width = 18, command = run_file)
+# run_btn.grid(row = 0, column = 2, pady = 20, padx = 5)
 #Buttons
-sbs_btn = Button(app, text = 'Run File Step-by-Step', width = 18, command = run_sbs)
-sbs_btn.grid(row = 0, column = 3, pady = 20, padx = 5)
+# sbs_btn = Button(app, text = 'Run File Step-by-Step', width = 18, command = run_sbs)
+# sbs_btn.grid(row = 0, column = 3, pady = 20, padx = 5)
 #Buttons
-ic_btn = Button(app, text = 'Open Interactive Console', width = 18, command = int_console)
-ic_btn.grid(row = 0, column = 4, pady = 20, padx = 5)
+# ic_btn = Button(app, text = 'Open Interactive Console', width = 18, command = int_console)
+# ic_btn.grid(row = 0, column = 4, pady = 20, padx = 5)
 
 
 #ListBox
@@ -442,5 +475,29 @@ scrollbar.grid(row = 1, column = 6)
 #Set Scrollbar to listbox
 ic_list.config(yscrollcommand = scrollbar.set)
 scrollbar.config(command = ic_list.yview)
+
+#Menu
+menu = Menu(app)
+app.config(menu = menu)
+
+submenu = Menu(menu)
+menu.add_cascade(label = "File", menu = submenu)
+submenu.add_command(label = "Load File", command = addressfetch)
+submenu.add_command(label = "Reinitialize", command = reinit)
+submenu.add_separator()
+submenu.add_command(label = "Exit", command = close_window)
+
+simmenu = Menu(menu)
+menu.add_cascade(label = "Simulator", menu = simmenu)
+simmenu.add_command(label = "Run program", command = run_file)
+simmenu.add_command(label = "Step-by-Step", command = run_sbs(PC))
+simmenu.add_separator()
+simmenu.add_command(label = "Settings", command = time_pass)
+
+openmenu = Menu(menu)
+menu.add_cascade(label = "Open", menu = openmenu)
+openmenu.add_command(label = "Interactive Console", command = int_console)
+openmenu.add_separator()
+openmenu.add_command(label = "Help", command = time_pass)
 
 app.mainloop()
