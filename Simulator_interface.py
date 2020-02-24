@@ -99,7 +99,8 @@ class Simulator:
         elif(instruction[0]=='lui'):
 
             if(len(instruction)!=3):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                msg = msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
 
             else:
                 reg1 = instruction[1].replace('$','')
@@ -360,6 +361,7 @@ class Simulator:
         self.main = {}
         self.instructions = []
         self.PC = 0
+        self.msg = ""
 
     def print_all(self):
 

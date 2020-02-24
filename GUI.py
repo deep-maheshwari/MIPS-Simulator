@@ -34,32 +34,40 @@ def run_sbs(s):
     s.Simulate_step()
     # highlight = ic_list.get(data_and_text['main'][PC])
     # highlight = Text(app, highlightcolor = 'Red')
-    reg_list2.delete(0, END)
-    reg_list2.insert(END, str(s.PC))
-    reg_list2.insert(END, '')
-    reg_list2.insert(END, '')
-    reg_list2.insert(END, '')
-    reg_list2.insert(END, '')
-    for register in s.reg:
-        reg_list2.insert(END, str(s.reg[register]))
-    reg_list2.insert(END, '')
+    if(s.msg==''):
 
-    ic_list.delete(0, END)
-    ic_list.insert(END, 'Data Segment')
-    ic_list.insert(END, '')
-    for i in range(len(s.data['.word'])):
-        ic_list.insert(END, hex((s.base_address+4*i))+": "+str(s.data['.word'][i]))
-    ic_list.insert(END, '')
-    ic_list.insert(END, '')
-    ic_list.insert(END, 'Text Segment')
-    ic_list.insert(END, '')
-    for i in s.data_and_text['main']:
-        ic_list.insert(END, str(i))
+        reg_list2.delete(0, END)
+        reg_list2.insert(END, str(s.PC))
+        reg_list2.insert(END, '')
+        reg_list2.insert(END, '')
+        reg_list2.insert(END, '')
+        reg_list2.insert(END, '')
+        for register in s.reg:
+            reg_list2.insert(END, str(s.reg[register]))
+        reg_list2.insert(END, '')
+
+        ic_list.delete(0, END)
+        ic_list.insert(END, 'Data Segment')
         ic_list.insert(END, '')
-    ic_list.insert(END, '')
+        for i in range(len(s.data['.word'])):
+            ic_list.insert(END, hex((s.base_address+4*i))+": "+str(s.data['.word'][i]))
+        ic_list.insert(END, '')
+        ic_list.insert(END, '')
+        ic_list.insert(END, 'Text Segment')
+        ic_list.insert(END, '')
+        for i in s.data_and_text['main']:
+            ic_list.insert(END, str(i))
+            ic_list.insert(END, '')
+        ic_list.insert(END, '')
 
+    else:
+
+        error_popup(s.msg)
+        
 def run_file(s):
+
     s.Simulate_all()
+    if(s.msg==""):
 
     # while(PC!=len(data_and_text['main'])-1):
 
@@ -68,29 +76,32 @@ def run_file(s):
         # if(PC>len(data_and_text['main'])):
         #     print("Unexpected error occured.")
         #     break
-    reg_list2.delete(0, END)
-    reg_list2.insert(END, str(s.PC))
-    reg_list2.insert(END, '')
-    reg_list2.insert(END, '')
-    reg_list2.insert(END, '')
-    reg_list2.insert(END, '')
-    for register in s.reg:
-        reg_list2.insert(END, str(s.reg[register]))
-    reg_list2.insert(END, '')
+        reg_list2.delete(0, END)
+        reg_list2.insert(END, str(s.PC))
+        reg_list2.insert(END, '')
+        reg_list2.insert(END, '')
+        reg_list2.insert(END, '')
+        reg_list2.insert(END, '')
+        for register in s.reg:
+            reg_list2.insert(END, str(s.reg[register]))
+        reg_list2.insert(END, '')
 
-    ic_list.delete(0, END)
-    ic_list.insert(END, 'Data Segment')
-    ic_list.insert(END, '')
-    for i in range(len(s.data['.word'])):
-        ic_list.insert(END, hex((s.base_address+4*i))+": "+str(s.data['.word'][i]))
-    ic_list.insert(END, '')
-    ic_list.insert(END, '')
-    ic_list.insert(END, 'Text Segment')
-    ic_list.insert(END, '')
-    for i in s.data_and_text['main']:
-        ic_list.insert(END, str(i))
+        ic_list.delete(0, END)
+        ic_list.insert(END, 'Data Segment')
         ic_list.insert(END, '')
-    ic_list.insert(END, '')
+        for i in range(len(s.data['.word'])):
+            ic_list.insert(END, hex((s.base_address+4*i))+": "+str(s.data['.word'][i]))
+        ic_list.insert(END, '')
+        ic_list.insert(END, '')
+        ic_list.insert(END, 'Text Segment')
+        ic_list.insert(END, '')
+        for i in s.data_and_text['main']:
+            ic_list.insert(END, str(i))
+            ic_list.insert(END, '')
+        ic_list.insert(END, '')
+
+    else:
+        error_popup(s.msg)
 
 def time_pass():
     print('Ohh! you want to open settings...')
