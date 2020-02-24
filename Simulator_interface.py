@@ -19,7 +19,8 @@ class Simulator:
 
         if(instruction[0]=='add'):
             if(len(instruction)!=4):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
 
             else:
                 reg1 = instruction[1].replace('$','')
@@ -30,7 +31,8 @@ class Simulator:
 
         elif(instruction[0]=='sub'):
             if(len(instruction)!=4):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
 
             else:
                 reg1 = instruction[1].replace('$','')
@@ -41,7 +43,8 @@ class Simulator:
 
         elif(instruction[0]=='lw'):
             if(len(instruction)!=3):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
 
             else:
                 reg_pattern = re.search(r"\$[a-z0-9]*",instruction[2],re.MULTILINE)
@@ -58,7 +61,8 @@ class Simulator:
 
         elif(instruction[0]=='sw'):
             if(len(instruction)!=3):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
 
             else:
                 reg_pattern = re.search(r"\$[a-z0-9]*",instruction[2],re.MULTILINE)
@@ -82,7 +86,8 @@ class Simulator:
         elif(instruction[0]=='bne'):
 
             if(len(instruction)!=4):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
             
             else:
                 reg1 = instruction[1].replace('$','')
@@ -99,7 +104,7 @@ class Simulator:
         elif(instruction[0]=='lui'):
 
             if(len(instruction)!=3):
-                msg = msg + "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
                 self.PC = len(self.instructions)+1
 
             else:
@@ -110,7 +115,8 @@ class Simulator:
         elif(instruction[0]=='slt'):
 
             if(len(instruction)!=4):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
 
             else:
                 reg1 = instruction[1].replace('$','')
@@ -124,7 +130,8 @@ class Simulator:
         elif(instruction[0]=='beq'):
 
             if(len(instruction)!=4):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
 
             else:
                 reg1 = instruction[1].replace('$','')
@@ -151,7 +158,8 @@ class Simulator:
         elif(instruction[0]=='j'):
 
             if(len(instruction)!=2):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
 
             else:
                 self.j_flag = instruction[1]
@@ -160,7 +168,8 @@ class Simulator:
         elif(instruction[0]=='addi'):
 
             if(len(instruction)!=4):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
 
             else:
                 reg1 = instruction[1].replace('$','')
@@ -174,7 +183,8 @@ class Simulator:
         elif(instruction[0]=='andi'):
 
             if(len(instruction)!=4):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
 
             else:
                 reg1 = instruction[1].replace('$','')
@@ -186,7 +196,8 @@ class Simulator:
         elif(instruction[0]=='and'):
 
             if(len(instruction)!=4):
-                msg = "Error in the given instruction. Missing or extra operand given"
+                self.msg = self.msg + "Error in the given instruction. Missing or extra operand given"
+                self.PC = len(self.instructions)+1
 
             else:
                 reg1 = instruction[1].replace('$','')
@@ -319,7 +330,7 @@ class Simulator:
             self.PC = self.run_instruction(self.data_and_text['main'][self.PC],self.PC)
 
             if(self.PC>len(self.data_and_text['main'])):
-                msg = "Unexpected error occured."
+                self.msg = "Unexpected error occured."
                 break
             
         # print(parse("add $s1, $s2, $s3"))

@@ -103,6 +103,7 @@ def run_file(s):
     else:
         error_popup(s.msg)
 
+
 def time_pass():
     print('Ohh! you want to open settings...')
 
@@ -172,7 +173,11 @@ def int_console():
     arrows.grid(row = 0, column = 0, sticky = W)
     entry = Entry(console, textvariable = instructs)
     entry.grid(row = 0, column = 1, columnspan = 5)
-    print(instructs)
+    console.bind('<Return>', run)
+    def run():
+        print(instructs)
+        s.run_instruction(s, instructs, 0)
+    output = Label(console, text = "")
 
 def close_window():
     app.destroy()
@@ -180,11 +185,18 @@ def close_window():
 def error_popup(msg):
     popup = Tk()
     popup.title("Oops! Error!!!")
-    popup.geometry('200x500')
+    popup.geometry('400x80')
+    
+    def reinit_popup(s):
+        reinit(s)
+        popup.destroy()
+
     error = Label(popup, text = msg)
-    error.grid(row = 0, column = 0)
-    ok_btn = Button(popup, text = "Okay", command = popup.destroy)
-    ok_btn.grid(row = 0, column = 0)
+    error.grid(row = 0, column = 0, columnspan = 2)
+    ri_btn = Button(popup, text = "Reinitialize", command = partial(reinit_popup, s))
+    ri_btn.grid(row = 1, column = 0, pady = 20)
+    abort_btn = Button(popup, text = "Abort", command = popup.destroy)
+    abort_btn.grid(row = 1, column = 1, pady = 20, sticky = W)
 
 
 #Buttons
