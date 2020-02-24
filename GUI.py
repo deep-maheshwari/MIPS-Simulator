@@ -34,19 +34,15 @@ def run_sbs(s):
     s.Simulate_step()
     # highlight = ic_list.get(data_and_text['main'][PC])
     # highlight = Text(app, highlightcolor = 'Red')
-    reg_list.delete(0, END)
-    reg_list.insert(END, '%-10s %s'%('PC:', str(s.PC)))
-    reg_list.insert(END, '')
-    reg_list.insert(END, '')
-    reg_list.insert(END, '')
-    reg_list.insert(END, '')
+    reg_list2.delete(0, END)
+    reg_list2.insert(END, str(s.PC))
+    reg_list2.insert(END, '')
+    reg_list2.insert(END, '')
+    reg_list2.insert(END, '')
+    reg_list2.insert(END, '')
     for register in s.reg:
-        if(register != 'zero'):
-            reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(s.reg[register])))
-        else:
-            reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(s.reg[register])))
-        
-    reg_list.insert(END, '')
+        reg_list2.insert(END, str(s.reg[register]))
+    reg_list2.insert(END, '')
 
     ic_list.delete(0, END)
     ic_list.insert(END, 'Data Segment')
@@ -72,19 +68,15 @@ def run_file(s):
         # if(PC>len(data_and_text['main'])):
         #     print("Unexpected error occured.")
         #     break
-    reg_list.delete(0, END)
-    reg_list.insert(END, '%-10s %s'%('PC:', str(s.PC)))
-    reg_list.insert(END, '')
-    reg_list.insert(END, '')
-    reg_list.insert(END, '')
-    reg_list.insert(END, '')
+    reg_list2.delete(0, END)
+    reg_list2.insert(END, str(s.PC))
+    reg_list2.insert(END, '')
+    reg_list2.insert(END, '')
+    reg_list2.insert(END, '')
+    reg_list2.insert(END, '')
     for register in s.reg:
-        if(register != 'zero'):
-            reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(s.reg[register])))
-        else:
-            reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(s.reg[register])))
-        
-    reg_list.insert(END, '')
+        reg_list2.insert(END, str(s.reg[register]))
+    reg_list2.insert(END, '')
 
     ic_list.delete(0, END)
     ic_list.insert(END, 'Data Segment')
@@ -111,19 +103,15 @@ def reinit(s):
     
     s.reinitialize()
 
-    reg_list.delete(0, END)
-    reg_list.insert(END, '%-10s %s'%('PC:', str(s.PC)))
-    reg_list.insert(END, '')
-    reg_list.insert(END, '')
-    reg_list.insert(END, '')
-    reg_list.insert(END, '')
+    reg_list2.delete(0, END)
+    reg_list2.insert(END, str(s.PC))
+    reg_list2.insert(END, '')
+    reg_list2.insert(END, '')
+    reg_list2.insert(END, '')
+    reg_list2.insert(END, '')
     for register in s.reg:
-        if(register != 'zero'):
-            reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(s.reg[register])))
-        else:
-            reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(s.reg[register])))
-        
-    reg_list.insert(END, '')
+        reg_list2.insert(END, str(s.reg[register]))
+    reg_list2.insert(END, '')
 
     ic_list.delete(0, END)
     ic_list.insert(END, 'Data Segment')
@@ -178,44 +166,65 @@ def int_console():
 def close_window():
     app.destroy()
 
+def error_popup(msg):
+    popup = Tk()
+    popup.title("Oops! Error!!!")
+    popup.geometry('200x500')
+    error = Label(popup, text = msg)
+    error.grid(row = 0, column = 0)
+    ok_btn = Button(popup, text = "Okay", command = popup.destroy)
+    ok_btn.grid(row = 0, column = 0)
 
 
-
 #Buttons
-# load_btn = Button(app, text = 'Load File', width = 18, command = addressfetch)
-# load_btn.grid(row = 0, column = 0, pady = 20, padx = 5)
+load_btn = Button(app, text = 'Load File', width = 18, command = partial(loadfile,s))
+load_btn.grid(row = 1, column = 0, pady = 0, padx = 0, columnspan = 2)
 #Buttons
-# ri_btn = Button(app, text = 'Reinitialize', width = 18, command = reinit)
-# ri_btn.grid(row = 0, column = 1, pady = 20, padx = 5)
+ri_btn = Button(app, text = 'Reinitialize', width = 18, command = partial(reinit,s))
+ri_btn.grid(row = 1, column = 2, pady = 5, padx = 0, sticky = E)
 #Buttons
-# run_btn = Button(app, text = 'Run File', width = 18, command = run_file)
-# run_btn.grid(row = 0, column = 2, pady = 20, padx = 5)
+run_btn = Button(app, text = 'Run File', width = 18, command = partial(run_file,s))
+run_btn.grid(row = 1, column = 3, pady = 0, padx = 0, sticky = E)
 #Buttons
-# sbs_btn = Button(app, text = 'Run File Step-by-Step', width = 18, command = run_sbs)
-# sbs_btn.grid(row = 0, column = 3, pady = 20, padx = 5)
+sbs_btn = Button(app, text = 'Run File Step-by-Step', width = 18, command = partial(run_sbs,s))
+sbs_btn.grid(row = 1, column = 4, pady = 0, padx = 0, sticky = E)
 #Buttons
-# ic_btn = Button(app, text = 'Open Interactive Console', width = 18, command = int_console)
-# ic_btn.grid(row = 0, column = 4, pady = 20, padx = 5)
+ic_btn = Button(app, text = 'Open Interactive Console', width = 18, command = int_console)
+ic_btn.grid(row = 1, column = 5, pady = 0, padx = 0, sticky = E)
 
 
 #ListBox
-reg_list = Listbox(app, height = 100, width = 20)
-reg_list.grid(row = 1, column = 0, pady = 20, padx = 20)
-reg_list.insert(END, '%-10s %s'%('PC:', str(s.PC)))
+reg_list = Listbox(app, height = 100, width = 10, borderwidth = 0)
+reg_list.grid(row = 2, column = 0, pady = 20, sticky = W)
+reg_list.insert(END, 'PC')
 reg_list.insert(END, '')
 reg_list.insert(END, '')
 reg_list.insert(END, '')
 reg_list.insert(END, '')
 for register in s.reg:
-    if(register != 'zero'):
-        reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(s.reg[register])))
-    else:
-        reg_list.insert(END, '%-10s %s'%(str(register) + ":", str(s.reg[register])))
+    reg_list.insert(END, str(register))
     
 reg_list.insert(END, '')
+
+#listBox
+reg_list2 = Listbox(app, height = 100, width = 10, borderwidth = 0)
+reg_list2.grid(row = 2, column = 1, pady = 20, sticky = W)
+reg_list2.insert(END, str(s.PC))
+reg_list2.insert(END, '')
+reg_list2.insert(END, '')
+reg_list2.insert(END, '')
+reg_list2.insert(END, '')
+for register in s.reg:
+    reg_list2.insert(END, str(s.reg[register]))
+reg_list2.insert(END, '')
+
+# height = len(reg)
+# for i in range(height):
+#     reg_lis
+
 # ListBox
 ic_list = Listbox(app, height = 100, width = 120)
-ic_list.grid(row = 1, column = 1, pady = 20, padx = 20, columnspan = 4, rowspan = 6)
+ic_list.grid(row = 2, column = 2, pady = 20, padx = 10, columnspan = 4, rowspan = 6)
 ic_list.insert(END, 'Data Segment')
 ic_list.insert(END, '')
 ic_list.insert(END, '')
@@ -225,7 +234,7 @@ ic_list.insert(END, '')
 
 #ScrollBar
 scrollbar = Scrollbar(app)
-scrollbar.grid(row = 1, column = 6)
+scrollbar.grid(row = 2, column = 6)
 
 #Set Scrollbar to listbox
 ic_list.config(yscrollcommand = scrollbar.set)
