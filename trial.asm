@@ -5,7 +5,7 @@
 .text
 	.globl main	
     main:
-	lui $s0, 0x1001, $s1
+	lui $s0, 0x1001
 
 	lw $s1, 0($s0)  
 

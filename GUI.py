@@ -22,7 +22,7 @@ s = Sim.Simulator()
 app = Tk()
 
 app.title('DTSpim')
-app.geometry('1400x1000')
+app.geometry('1400x800')
 frame = Frame(app)
 frame.grid(sticky = 'nwes')
 
@@ -31,12 +31,16 @@ app.filename = ""
 def run_sbs(s):
     print(s.data_and_text['main'])
     print(s.PC)
+    if(s.PC == len(s.data_and_text['main'])):
+        msg_popup("Program finished!")
+        s.PC = 0
+
     s.Simulate_step()
-    # highlight = ic_list.get(data_and_text['main'][PC])
-    # highlight = Text(app, highlightcolor = 'Red')
+
     if(s.msg==''):
 
         reg_list2.delete(0, END)
+        reg_list2.insert(END, '')
         reg_list2.insert(END, str(s.PC))
         reg_list2.insert(END, '')
         reg_list2.insert(END, '')
@@ -47,6 +51,7 @@ def run_sbs(s):
         reg_list2.insert(END, '')
 
         ic_list.delete(0, END)
+        ic_list.insert(END, '')
         ic_list.insert(END, 'Data Segment')
         ic_list.insert(END, '')
         for i in range(len(s.data['.word'])):
@@ -60,8 +65,9 @@ def run_sbs(s):
             ic_list.insert(END, '')
         ic_list.insert(END, '')
 
-    else:
+        ic_list.itemconfig(len(s.data['.word']) + 5 + s.PC*2, background = '#00ff01')
 
+    else:
         error_popup(s.msg)
         
 def run_file(s):
@@ -77,6 +83,7 @@ def run_file(s):
         #     print("Unexpected error occured.")
         #     break
         reg_list2.delete(0, END)
+        reg_list2.insert(END, '')
         reg_list2.insert(END, str(s.PC))
         reg_list2.insert(END, '')
         reg_list2.insert(END, '')
@@ -87,6 +94,7 @@ def run_file(s):
         reg_list2.insert(END, '')
 
         ic_list.delete(0, END)
+        ic_list.insert(END, '')
         ic_list.insert(END, 'Data Segment')
         ic_list.insert(END, '')
         for i in range(len(s.data['.word'])):
@@ -99,13 +107,10 @@ def run_file(s):
             ic_list.insert(END, str(i))
             ic_list.insert(END, '')
         ic_list.insert(END, '')
+        scrollbar.config(command = ic_list.yview)
 
     else:
         error_popup(s.msg)
-
-
-def time_pass():
-    print('Ohh! you want to open settings...')
 
 # def addressfetch(data_and_text,instructions,data,reg,PC,base_address,bne_flag,beq_flag,j_flag,label_address,main):
     
@@ -116,6 +121,7 @@ def reinit(s):
     s.reinitialize()
 
     reg_list2.delete(0, END)
+    reg_list2.insert(END, '')
     reg_list2.insert(END, str(s.PC))
     reg_list2.insert(END, '')
     reg_list2.insert(END, '')
@@ -125,7 +131,8 @@ def reinit(s):
         reg_list2.insert(END, str(s.reg[register]))
     reg_list2.insert(END, '')
 
-    ic_list.delete(0, END)
+    ic_list.delete(0, END)    
+    ic_list.insert(END, '')
     ic_list.insert(END, 'Data Segment')
     ic_list.insert(END, '')
     ic_list.insert(END, '')
@@ -136,65 +143,101 @@ def reinit(s):
     print(s.data)
 
 def loadfile(s):
-    app.filename = filedialog.askopenfilename(initialdir = '/CO', title = 'Select a File', filetypes = (('asm files', '*.asm'), ('s files', '*.s')))
-    filename = app.filename
+    if(len(s.instructions) != 0):
+        msg_popup("WARNING!!! If you do not reinitialize, the data will get appended twice.\nIt is recommended to reintialize before load file.")
 
-    s.fetch_and_load_file(filename)
-    s.load_data_and_text()
-    s.load_data()
-    s.load_main()
-    s.set_data_and_text()
+    else:
+        app.filename = filedialog.askopenfilename(initialdir = '/CO', title = 'Select a File', filetypes = (('asm files', '*.asm'), ('s files', '*.s')))
+        filename = app.filename
 
-    # label = Label(app, text = str(data['.word']))
-    # label.grid(row = 1, column = 1)
-    # ic_list = Listbox(app, height = 100, width = 80)
-    # ic_list.grid(row = 1, column = 1, pady = 20, padx = 20, columnspan = 3, rowspan = 6)
-    ic_list.delete(0, END)
-    ic_list.insert(END, 'Data Segment')
-    ic_list.insert(END, '')
-    for i in range(len(s.data['.word'])):
-        ic_list.insert(END, hex((s.base_address+4*i))+": "+str(s.data['.word'][i]))
-    ic_list.insert(END, '')
-    ic_list.insert(END, '')
-    ic_list.insert(END, 'Text Segment')
-    ic_list.insert(END, '')
-    for i in s.data_and_text['main']:
-        ic_list.insert(END, str(i))
+        s.fetch_and_load_file(filename)
+        s.load_data_and_text()
+        s.load_data()
+        s.load_main()
+        s.set_data_and_text()
+
+        # label = Label(app, text = str(data['.word']))
+        # label.grid(row = 1, column = 1)
+        # ic_list = Listbox(app, height = 100, width = 80)
+        # ic_list.grid(row = 1, column = 1, pady = 20, padx = 20, columnspan = 3, rowspan = 6)
+        ic_list.delete(0, END)
         ic_list.insert(END, '')
-    ic_list.insert(END, '')
-    s.print_all()
+        ic_list.insert(END, 'Data Segment')
+        ic_list.insert(END, '')
+        for i in range(len(s.data['.word'])):
+            ic_list.insert(END, hex((s.base_address+4*i))+": "+str(s.data['.word'][i]))
+        ic_list.insert(END, '')
+        ic_list.insert(END, '')
+        ic_list.insert(END, 'Text Segment')
+        ic_list.insert(END, '')
+        for i in s.data_and_text['main']:
+            ic_list.insert(END, str(i))
+            ic_list.insert(END, '')
+        ic_list.insert(END, '')
+        scrollbar.config(command = ic_list.yview)
+    # s.print_all()
 
 def int_console():
     console = Tk()
     console.title('Interactive Console')
     console.geometry('800x600')
-    instructs = StringVar()
-    arrows = Label(console, text = '>>')
-    arrows.grid(row = 0, column = 0, sticky = W)
-    entry = Entry(console, textvariable = instructs)
-    entry.grid(row = 0, column = 1, columnspan = 5)
-    console.bind('<Return>', run)
-    def run():
-        print(instructs)
-        s.run_instruction(s, instructs, 0)
-    output = Label(console, text = "")
+    # instructs = StringVar()
+    # arrows = Label(console, text = '>>')
+    # arrows.grid(row = 0, column = 0, sticky = W)
+    # entry = Entry(console, textvariable = instructs)
+    # entry.grid(row = 0, column = 1, columnspan = 5)
+    # console.bind('<Return>', run)
+    # def run():
+    #     print(instructs)
+    #     s.run_instruction(s, instructs, 0)
+    # output = Label(console, text = "")
+    progress = Label(console, text = "Interactive Console is on progress, sorry for the inconvenience")
+    progress.grid(row = 0, column = 0, pady = 50, padx = 175)
+
+def settings():
+    setting = Tk()
+    setting.title('Settings')
+    setting.geometry('800x600')
+    progress = Label(console, text = "Settings is on progress, sorry for the inconvenience")
+    progress.grid(row = 0, column = 0, pady = 50, padx = 175)
+
+def help_win():
+    window = Tk()
+    window.title('Help')
+    window.geometry('800x600')
+    progress = Label(console, text = "Help window is on progress, sorry for the inconvenience")
+    progress.grid(row = 0, column = 0, pady = 50, padx = 175)
 
 def close_window():
     app.destroy()
 
-def error_popup(msg):
+def msg_popup(msg):
     popup = Tk()
-    popup.title("Oops! Error!!!")
-    popup.geometry('400x80')
+    popup.title("Program executed successfully")
+    popup.geometry('450x110')
     
     def reinit_popup(s):
         reinit(s)
         popup.destroy()
 
     error = Label(popup, text = msg)
-    error.grid(row = 0, column = 0, columnspan = 2)
+    error.grid(row = 0, column = 0, columnspan = 2, pady = 10)
     ri_btn = Button(popup, text = "Reinitialize", command = partial(reinit_popup, s))
-    ri_btn.grid(row = 1, column = 0, pady = 20)
+    ri_btn.grid(row = 1, column = 0, pady = 20, sticky = 'we')
+
+def error_popup(msg):
+    popup = Tk()
+    popup.title("Oops! Error!!!")
+    popup.geometry('450x110')
+    
+    def reinit_popup(s):
+        reinit(s)
+        popup.destroy()
+
+    error = Label(popup, text = msg)
+    error.grid(row = 0, column = 0, columnspan = 2, pady = 10)
+    ri_btn = Button(popup, text = "Reinitialize", command = partial(reinit_popup, s))
+    ri_btn.grid(row = 1, column = 0, pady = 20, sticky = 'we')
     abort_btn = Button(popup, text = "Abort", command = popup.destroy)
     abort_btn.grid(row = 1, column = 1, pady = 20, sticky = W)
 
@@ -217,21 +260,28 @@ ic_btn.grid(row = 1, column = 5, pady = 0, padx = 0, sticky = E)
 
 
 #ListBox
-reg_list = Listbox(app, height = 100, width = 10, borderwidth = 0)
-reg_list.grid(row = 2, column = 0, pady = 20, sticky = W)
+reg_list = Listbox(app, height = 40, width = 10, borderwidth = 0, font = ('Times', 12, 'bold'), bg = '#a4cac2')
+reg_list.grid(row = 2, column = 0, pady = 20, sticky = 'ns')
+reg_list.insert(END, '')
 reg_list.insert(END, 'PC')
 reg_list.insert(END, '')
 reg_list.insert(END, '')
 reg_list.insert(END, '')
 reg_list.insert(END, '')
+i = 0
 for register in s.reg:
-    reg_list.insert(END, str(register))
-    
+    if(i < 10):
+        reg_list.insert(END, "R" + str(i) + "    " + "[" + str(register) + "]")
+    else:
+        reg_list.insert(END, "R" + str(i) + "  " + "[" + str(register) + "]")
+    i+=1
+
 reg_list.insert(END, '')
 
 #listBox
-reg_list2 = Listbox(app, height = 100, width = 10, borderwidth = 0)
-reg_list2.grid(row = 2, column = 1, pady = 20, sticky = W)
+reg_list2 = Listbox(app, height = 40, width = 10, borderwidth = 0, font = ('Times', 12), bg = '#a4cac2')
+reg_list2.grid(row = 2, column = 1, pady = 20, sticky = 'ns')
+reg_list2.insert(END, '')
 reg_list2.insert(END, str(s.PC))
 reg_list2.insert(END, '')
 reg_list2.insert(END, '')
@@ -246,8 +296,9 @@ reg_list2.insert(END, '')
 #     reg_lis
 
 # ListBox
-ic_list = Listbox(app, height = 100, width = 120)
-ic_list.grid(row = 2, column = 2, pady = 20, padx = 10, columnspan = 4, rowspan = 6)
+ic_list = Listbox(app, height = 40, width = 120, font = ('Times', 13, 'bold'), bg = 'LightBlue')
+ic_list.grid(row = 2, column = 2, pady = 20, padx = 10, columnspan = 4, rowspan = 6, sticky = 'ns')
+ic_list.insert(END, '')
 ic_list.insert(END, 'Data Segment')
 ic_list.insert(END, '')
 ic_list.insert(END, '')
@@ -256,12 +307,12 @@ ic_list.insert(END, '')
 ic_list.insert(END, '')
 
 #ScrollBar
-scrollbar = Scrollbar(app)
-scrollbar.grid(row = 2, column = 6)
+scrollbar = Scrollbar(app, command = ic_list.yview, orient = VERTICAL)
+scrollbar.grid(row = 2, column = 6, sticky = 'ns')
 
 #Set Scrollbar to listbox
-ic_list.config(yscrollcommand = scrollbar.set)
-scrollbar.config(command = ic_list.yview)
+# scrollbar.config(command = ic_list.yview)
+ic_list.configure(yscrollcommand = scrollbar.set)
 
 #Menu
 menu = Menu(app)
@@ -279,12 +330,12 @@ menu.add_cascade(label = "Simulator", menu = simmenu)
 simmenu.add_command(label = "Run program", command = partial(run_file,s))
 simmenu.add_command(label = "Step-by-Step", command = partial(run_sbs,s))
 simmenu.add_separator()
-simmenu.add_command(label = "Settings", command = time_pass)
+simmenu.add_command(label = "Settings", command = settings)
 
 openmenu = Menu(menu)
 menu.add_cascade(label = "Open", menu = openmenu)
 openmenu.add_command(label = "Interactive Console", command = int_console)
 openmenu.add_separator()
-openmenu.add_command(label = "Help", command = time_pass)
+openmenu.add_command(label = "Help", command = help_win)
 
 app.mainloop()
