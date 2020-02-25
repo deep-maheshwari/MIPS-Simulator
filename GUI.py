@@ -198,14 +198,14 @@ def settings():
     setting = Tk()
     setting.title('Settings')
     setting.geometry('800x600')
-    progress = Label(console, text = "Settings is on progress, sorry for the inconvenience")
+    progress = Label(setting, text = "Settings is on progress, sorry for the inconvenience")
     progress.grid(row = 0, column = 0, pady = 50, padx = 175)
 
 def help_win():
     window = Tk()
     window.title('Help')
     window.geometry('800x600')
-    progress = Label(console, text = "Help window is on progress, sorry for the inconvenience")
+    progress = Label(window, text = "Help window is on progress, sorry for the inconvenience")
     progress.grid(row = 0, column = 0, pady = 50, padx = 175)
 
 def close_window():
