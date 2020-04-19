@@ -227,8 +227,8 @@ def read_instructions(instructions):
 
     return parsed_list
 
-instructions = read_instructions(fileHandler("C:/Users/Admin/Documents/4th semester/Computer Organisation/Lab_project/COproj_phase1/trial.asm"))
-data_and_text = {'data':[],'main':[],}
+instructions = read_instructions(fileHandler("C:/Users/Admin/Documents/4th semester/Computer Organisation/Lab_project/COproj/Phase1/bubble_sort.asm"))
+data_and_text = {'data':[],'main':[]}
 
 pos_data = 0
 pos_main = 0
@@ -293,7 +293,10 @@ for ins in data_and_text['main']:
 # print(main)
 print(reg)
 print(data['.word'])
-
+print(data_and_text['data'])
+print(main)
+print(label_address)
+print()
 print('1.Run file')
 print('2.Run file step by step')
 
@@ -301,10 +304,12 @@ print('Choose one of the above option')
 
 option = int(input())
 
+count = 0
 if(option==1):
 
     while(PC!=len(data_and_text['main'])-1):
-
+        print(PC)
+        count+=1
         PC = run_instruction(data_and_text['main'][PC],PC)
 
         if(PC>len(data_and_text['main'])):
@@ -316,7 +321,9 @@ if(option==1):
 
     for i in range(len(data['.word'])):
         print(hex((base_address+4*i))+": "+str(data['.word'][i]))
-    
+
+    print(count)
+
 # print(parse("add $s1, $s2, $s3"))
 #print(len(data_and_text['main']))
 
