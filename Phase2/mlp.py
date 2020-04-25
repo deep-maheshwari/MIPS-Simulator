@@ -14,6 +14,7 @@ PC = 0
 msg = ""
 stalls = 0
 stall_flag = False
+bn_flag = False
 
 ins_type1 = ['add','sub','and','or','slt']
 ins_type2 = ['addi','andi','ori','sll','srl']
@@ -111,11 +112,40 @@ def ins_list(instructions,data_and_text,data,label_address,main):
         if(ins[0] in main.keys()):
             data_and_text['main'].remove(ins)
 
-def fetch():
+def stllflg_t(lock):
+    global stall_flag
+
+    lock.acquire()
+    stall_flag = True
+    lock.release()
+
+def stllflg_f(lock):
+    global stall_flag
+
+    lock.acquire()
+    stall_flag = False
+    lock.release()
+
+def bnflg_t(lock):
+    global bn_flag
+
+    lock.acquire()
+    bn_flag = True
+    lock.release()
+
+def bnflg_f(lock):
+    global bn_flag
+
+    lock.acquire()
+    bn_flag = False
+    lock.release()
+    
+def fetch(lock):
 
     global PC
     global reg_flag
     global stall_flag
+    global bn_flag
 
     instr = data_and_text['main'][PC]
     
@@ -137,42 +167,46 @@ def fetch():
     elif(instr[0] in ins_type3):
         reg1 = instr[1].replace('$','')
         reg2 = instr[2].replace('$','')
+
         if(reg_flag[reg1][0]=='d' and reg_flag[reg1][1]=='m'):
             #take value from latch_m
-            stall_flag = True
+            stllflg_t(lock)
+            bnflg_t(lock)
             sleep(2.0)
-            stall_flag = False
+
         elif(reg_flag[reg2][0]=='d' and reg_flag[reg2][1]=='m'):
             #take value from latch_m
-            stall_flag = True
+            stllflg_t(lock)
+            bnflg_t(lock)
             sleep(2.0)
-            stall_flag = False
+
         elif(reg_flag[reg1][0]=='e' and reg_flag[reg1][1]=='m'):
             #take value from latch_m
-            stall_flag = True
+            stllflg_t(lock)
+            bnflg_t(lock)
             sleep(2.0)
-            stall_flag = False
+
         elif(reg_flag[reg2][0]=='e' and reg_flag[reg2][1]=='m'):
             #take value from latch_m
-            print('hell')
-            stall_flag = True
-            sleep(1.0)
-            stall_flag = False
+            #print('hell')
+            stllflg_t(lock)
+            bnflg_t(lock)
+            sleep(2.0)
+
         elif(reg_flag[reg1][0]=='d' and reg_flag[reg1][1]=='e'):
             #take value from latch_e
-            stall_flag = True
+            stllflg_t(lock)
             sleep(1.0)
-            stall_flag = False
+
         elif(reg_flag[reg2][0]=='d' and reg_flag[reg2][1]=='e'):
             #take value from latch_e
-            stall_flag = True
+            stllflg_t(lock)
             sleep(1.0)
-            stall_flag = False
 
         #print(PC)
     return instr
 
-def decode(parsed_ins):
+def decode(parsed_ins,lock):
 
     global main
     global PC
@@ -186,9 +220,9 @@ def decode(parsed_ins):
         reg2 = parsed_ins[3].replace('$','')
 
         if(reg_flag[reg1][0]=='e' and reg_flag[reg1][1]=='m'):
-            stall_flag = True
+            stllflg_t(lock)
         if(reg_flag[reg2][0]=='e' and reg_flag[reg2][1]=='m'):
-            stall_flag = True
+            stllflg_t(lock)
 
         reg_flag[regstr][0] = 'e'
         return {'ins':parsed_ins[0],'rd':parsed_ins[1].replace('$',''),'rs':parsed_ins[2].replace('$',''),'rt':parsed_ins[3].replace('$','')}
@@ -199,7 +233,7 @@ def decode(parsed_ins):
         reg1 = parsed_ins[2].replace('$','')
 
         if(reg_flag[reg1][0]=='e' and reg_flag[reg1][1]=='m'):
-            stall_flag = True
+            stllflg_t(lock)
 
         reg_flag[regstr][0] = 'e'
         return {'ins':parsed_ins[0],'rd':parsed_ins[1].replace('$',''),'rs':parsed_ins[2].replace('$',''),'amt':parsed_ins[3]}
@@ -230,9 +264,9 @@ def decode(parsed_ins):
                 PC = main[addr]
 
         else:
-            print(value1,value2)
+            #print(value1,value2)
             if(value1 != value2):
-                print('in here')
+                #print('in here')
                 PC = PC + 1
             else:
                 PC = main[addr]
@@ -252,7 +286,7 @@ def decode(parsed_ins):
 
         reg1 = reg_pattern.group(0).replace('$','')
         if(reg_flag[reg1][0]=='e' and reg_flag[reg1][1]=='m'):
-            stall_flag = True
+            stllflg_t(lock)
 
         reg_flag[regstr][0]='e'
         return {'ins':parsed_ins[0],'rt':parsed_ins[1].replace('$',''),'rm':reg_pattern.group(0).replace('$',''),'offset':int(offset_pattern.group(0))}
@@ -525,7 +559,7 @@ def writeback(result):
             reg[regstr] = value
             reg_flag[regstr] = ['','']             
 
-def pipeline():
+def pipeline(lock):
 
     global PC
     global latch_f
@@ -534,33 +568,51 @@ def pipeline():
     global latch_m
     global stall_flag
 
-    print(PC)
+    print(data)
 
-    f = fetch()
+    #fetch cycle
+    start = time.perf_counter()
+    f = fetch(lock)
     if(f):
         latch_f = f
-    sleep(1.0)
+    end = time.perf_counter()
+    if(end-start<1):
+        sleep(1.0-round(end-start,2))
+    else:
+        sleep(1.0)
     if(stall_flag==True):
         sleep(1.0)
-        stall_flag = False
+        stllflg_f(lock)
+    #decode cycle
     sleep(0.5)
-    d = decode(f)
+    start = time.perf_counter()
+    d = decode(f,lock)
     if(d):
         latch_d = d
-    sleep(0.5)
+    end = time.perf_counter()
+    sleep(0.5-round(end-start,2))
     if(stall_flag==True):
         sleep(1.0)
-        stall_flag = False
+        stllflg_f(lock)
+    #execute cycle
+    start = time.perf_counter()
     e = execute(d)
     if(e):
         latch_e = e[0]
-    sleep(1.0)
+    end = time.perf_counter()
+    sleep(1.0-round(end-start,2))
+    #memory cycle
+    start = time.perf_counter()
     m = memory(e)
     if(m):
         latch_m = m[0]
-    sleep(1.0)
+    end = time.perf_counter()
+    sleep(1.0-round(end-start,2))
+    #writeback cycle
+    start = time.perf_counter()
     w = writeback(m)
-    sleep(1.0)
+    end = time.perf_counter()
+    sleep(1.0-round(end-start,2))
     
 def Simulate():
 
@@ -573,29 +625,37 @@ def Simulate():
     global latch_m
     global reg_flag
     global stall_flag
+    global bn_flag
 
-    instructions = read_instructions(fileHandler("C:/Users/Admin/Documents/4th semester/Computer Organisation/Lab_project/COproj/Phase1/bubble_sort.asm"))
+    instructions = read_instructions(fileHandler("C:/Users/Admin/Documents/4th semester/Computer Organisation/Lab_project/COproj/Phase1/trial.asm"))
     ins_list(instructions,data_and_text,data,label_address,main)
 
     process_list = []
-
+    lock = threading.Lock()
     instruction = data_and_text['main']
     
     for i in range(200):
-        p = threading.Thread(target=pipeline,args=())
+        p = threading.Thread(target=pipeline,args=(lock,))
         process_list.append(p)
     
     start = time.perf_counter()
     count = 0
 
     while(PC<len(instruction)-1):
-        while(stall_flag == True):
+        
+        if(stall_flag==True and bn_flag==True):
+            sleep(2.0)
+            stllflg_f(lock)
+            bnflg_f(lock)
+
+        elif(stall_flag==True):
             sleep(1.0)
+            stllflg_f(lock)
 
         if(len(latch_f)>0):
             if(latch_f[0] in ins_type5 or latch_f[0] in ins_type3):
                 sleep(1.0)
-
+        
         process_list[count].start()
         count+=1
         sleep(1.0)
