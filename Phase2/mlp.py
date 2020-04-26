@@ -574,7 +574,9 @@ def pipeline(lock):
     start = time.perf_counter()
     f = fetch(lock)
     if(f):
+        lock.acquire()
         latch_f = f
+        lock.release()
     end = time.perf_counter()
     if(end-start<1):
         sleep(1.0-round(end-start,2))
@@ -588,7 +590,9 @@ def pipeline(lock):
     start = time.perf_counter()
     d = decode(f,lock)
     if(d):
+        lock.acquire()
         latch_d = d
+        lock.release()
     end = time.perf_counter()
     sleep(0.5-round(end-start,2))
     if(stall_flag==True):
@@ -598,14 +602,18 @@ def pipeline(lock):
     start = time.perf_counter()
     e = execute(d)
     if(e):
+        lock.acquire()
         latch_e = e[0]
+        lock.release()
     end = time.perf_counter()
     sleep(1.0-round(end-start,2))
     #memory cycle
     start = time.perf_counter()
     m = memory(e)
     if(m):
+        lock.acquire()
         latch_m = m[0]
+        lock.release()
     end = time.perf_counter()
     sleep(1.0-round(end-start,2))
     #writeback cycle
@@ -627,22 +635,18 @@ def Simulate():
     global stall_flag
     global bn_flag
 
-    instructions = read_instructions(fileHandler("C:/Users/Admin/Documents/4th semester/Computer Organisation/Lab_project/COproj/Phase1/trial.asm"))
+    instructions = read_instructions(fileHandler("C:/Users/Admin/Documents/4th semester/Computer Organisation/Lab_project/COproj/Phase1/bubble_sort.asm"))
     ins_list(instructions,data_and_text,data,label_address,main)
 
     process_list = []
     lock = threading.Lock()
     instruction = data_and_text['main']
     
-    for i in range(200):
-        p = threading.Thread(target=pipeline,args=(lock,))
-        process_list.append(p)
-    
-    start = time.perf_counter()
+    start1 = time.perf_counter()
     count = 0
 
     while(PC<len(instruction)-1):
-        
+        start = time.perf_counter()
         if(stall_flag==True and bn_flag==True):
             sleep(2.0)
             stllflg_f(lock)
@@ -656,20 +660,28 @@ def Simulate():
             if(latch_f[0] in ins_type5 or latch_f[0] in ins_type3):
                 sleep(1.0)
         
+        p = threading.Thread(target=pipeline,args=(lock,))
+        process_list.append(p)
+        if(count>=5):
+            process_list[count-5].join()
         process_list[count].start()
         count+=1
-        sleep(1.0)
+        end = time.perf_counter()
+        if(round(end-start,2)<1.0):
+            sleep(1.0-round(end-start,2))
+        else:
+            sleep(1.0-round((end-start)/10,2))
         # print(reg)
         # print(data['.word'])
 
-    for i in range(count):
+    for i in range(count-4,count):
         process_list[i].join()
 
     # for ins in instruction:
     #     pipeline(ins)
 
-    end = time.perf_counter()
-    print(round(end-start,3))
+    end1 = time.perf_counter()
+    print(round(end1-start1,3))
     print(count)
     print()
     print(reg)
