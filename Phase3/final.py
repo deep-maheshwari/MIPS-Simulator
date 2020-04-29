@@ -8,6 +8,10 @@ reg_flag = {"zero":['',''], "r0":['',''], "at":['',''], "v0":['',''], "v1":['','
 base_address = 0x10010000
 data_and_text = {'data':[],'main':[]}
 data = {'.word':[],'.text':[]}
+l1d = {}
+l1i = {}
+l2 = {}
+mm = {}
 label_address = {}
 main = {}
 PC = 0
@@ -29,6 +33,11 @@ latch_e = 0
 latch_m = 0
 
 ins_queue = []
+
+pointer = 0
+def fill_mm(data):
+    mm[hex(pointer)] = data
+    pointer+=1
 
 def fileHandler(filename):
 
@@ -146,9 +155,18 @@ def fetch(lock):
     global reg_flag
     global stall_flag
     global bn_flag
+    global l1i_status
 
     instr = data_and_text['main'][PC]
     
+    fill_mm(instr)
+
+    if(instr in l1i):
+        l1i_status = 'hit'
+    else:
+        l1i_status = 'miss'
+        l1i[]
+
     if((instr[0] in ins_type1) or (instr[0] in ins_type2) or (instr[0] in ins_type6)):
         regstr = instr[1].replace('$','')
         reg_flag[regstr][0] = 'd'
@@ -622,6 +640,12 @@ def pipeline(lock):
     end = time.perf_counter()
     sleep(1.0-round(end-start,2))
     
+# def CacheCreation(cache_size, block_size, assoc, latency):
+#     l1d = {}
+#     l1i = {}
+#     l2 = {}
+#     mm = {}
+
 def Simulate():
 
     global PC
@@ -686,6 +710,8 @@ def Simulate():
     print()
     print(reg)
     print(data['.word'])
+
+
 
 if __name__== "__main__":
     Simulate()
