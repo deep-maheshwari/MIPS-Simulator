@@ -288,7 +288,8 @@ def decode(parsed_ins,lock):
         if(reg_flag[reg1][0]=='e' and reg_flag[reg1][1]=='m'):
             stllflg_t(lock)
 
-        reg_flag[regstr][0]='e'
+        if(parsed_ins[0]=='lw'):
+            reg_flag[regstr][0]='e'
         return {'ins':parsed_ins[0],'rt':parsed_ins[1].replace('$',''),'rm':reg_pattern.group(0).replace('$',''),'offset':int(offset_pattern.group(0))}
 
     elif(parsed_ins[0]=='lui'):
@@ -459,7 +460,8 @@ def execute(decoded_ins):
         index = 0
         if(int(str(value1),16)-base_address>=0 and (int(str(value1),16)-base_address)%4==0 and offset%4==0):
             index = int((int(str(value1),16)-base_address)/4 + offset/4)
-        reg_flag[regstr][0] = 'm'
+        if(decoded_ins['ins']=='lw'):
+            reg_flag[regstr][0] = 'm'
         #print(index,decoded_ins)
         return (index,decoded_ins)
 
@@ -544,7 +546,7 @@ def memory(execute):
                     data['.word'][index] = value
                     return ()
         else:
-            reg_flag[execute[0]] = 'w'
+            reg_flag[execute[1]][0] = 'w'
             return execute
     else:
         return ()
@@ -635,7 +637,7 @@ def Simulate():
     global stall_flag
     global bn_flag
 
-    instructions = read_instructions(fileHandler("/home/tapish/CO/Project_Phase 1/COproj_phase1/Phase1/trial.asm"))
+    instructions = read_instructions(fileHandler("/home/tapish/CO/Project_Phase 1/COproj_phase1/Phase1//bubble_sort.asm"))
     ins_list(instructions,data_and_text,data,label_address,main)
 
     process_list = []

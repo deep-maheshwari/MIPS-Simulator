@@ -1,17 +1,32 @@
 import re
+import math
 import time
 from time import sleep
 import threading
 
+blocks = 64
+block_size = 64
+assoc = 16
+
 reg = {"zero":0, "r0":0, "at":0, "v0":0, "v1":0, "a0":0, "a1":0, "a2":0, "a3":0, "t0":0, "t1":0, "t2":0, "t3":0, "t4":0, "t5":0, "t6":0, "t7":0,"s0":0, "s1":0, "s2":0, "s3":0 ,"s4":0 ,"s5":0, "s6":0, "s7":0, "t8":0, "t9":0, "k0":0, "k1":0, "gp":0, "sp":0, "s8":0, "ra":0}
 reg_flag = {"zero":['',''], "r0":['',''], "at":['',''], "v0":['',''], "v1":['',''], "a0":['',''], "a1":['',''], "a2":['',''], "a3":['',''], "t0":['',''], "t1":['',''], "t2":['',''], "t3":['',''], "t4":['',''], "t5":['',''], "t6":['',''], "t7":['',''],"s0":['',''], "s1":['',''], "s2":['',''], "s3":['',''] ,"s4":['',''] ,"s5":['',''], "s6":['',''], "s7":['',''], "t8":['',''], "t9":['',''], "k0":['',''], "k1":['',''], "gp":['',''], "sp":['',''], "s8":['',''], "ra":['','']}
+reg_address = {'zero': 5000, 'r0': 5001, 'at': 5002, 'v0': 5003, 'v1': 5004, 'a0': 5005, 'a1': 5006, 'a2': 5007, 'a3': 5008, 't0': 5009, 't1': 5010, 't2': 5011, 't3': 5012, 't4': 5013, 't5': 5014, 't6': 5015, 't7': 5016, 's0': 5017, 's1': 5018, 's2': 5019, 's3': 5020, 's4': 5021, 's5': 5022, 's6': 5023, 's7': 5024, 't8': 5025, 't9': 5026, 'k0': 5027, 'k1': 5028, 'gp': 5029, 'sp': 5030, 's8': 5031, 'ra': 5032}
 base_address = 0x10010000
 data_and_text = {'data':[],'main':[]}
 data = {'.word':[],'.text':[]}
-l1d = {}
+l1d = {
+        0: {0: [None]*64, 1: [None]*64, 2: [None]*64, 3: [None]*64, 4: [None]*64, 5: [None]*64, 6: [None]*64, 7: [None]*64, 8: [None]*64, 9: [None]*64, 10: [None]*64, 11: [None]*64, 12: [None]*64, 13: [None]*64, 14: [None]*64, 15: [None]*64},
+        1: {16: [None]*64, 17: [None]*64, 18: [None]*64, 19: [None]*64, 20: [None]*64, 21: [None]*64, 22: [None]*64, 23: [None]*64, 24: [None]*64, 25: [None]*64, 26: [None]*64, 27: [None]*64, 28: [None]*64, 29: [None]*64, 30: [None]*64, 31: [None]*64},
+        2: {32: [None]*64, 33: [None]*64, 34: [None]*64, 35: [None]*64, 36: [None]*64, 37: [None]*64, 38: [None]*64, 39: [None]*64, 40: [None]*64, 41: [None]*64, 42: [None]*64, 43: [None]*64, 44: [None]*64, 45: [None]*64, 46: [None]*64, 47: [None]*64},
+        3: {48: [None]*64, 49: [None]*64, 50: [None]*64, 51: [None]*64, 52: [None]*64, 53: [None]*64, 54: [None]*64, 55: [None]*64, 56: [None]*64, 57: [None]*64, 58: [None]*64, 59: [None]*64, 60: [None]*64, 61: [None]*64, 62: [None]*64, 63: [None]*64}
+}
 l1i = {}
 l2 = {}
-mm = {}
+mm = []
+index = int(math.log(blocks/assoc, 2))
+offset = int(math.log(block_size, 2))
+l1d_hit_count = 0
+l1d_miss_count = 0
 label_address = {}
 main = {}
 PC = 0
@@ -34,11 +49,6 @@ latch_m = 0
 
 ins_queue = []
 
-pointer = 0
-def fill_mm(data):
-    mm[hex(pointer)] = data
-    pointer+=1
-
 def fileHandler(filename):
 
     file = open(filename,'r')
@@ -60,7 +70,7 @@ def parse(text):
 
     return parsed
 
-def read_instructions(instructions):
+def read_instructions(instructions):    #
 
     parsed_list = []
     for ins in instructions:
@@ -106,8 +116,9 @@ def ins_list(instructions,data_and_text,data,label_address,main):
         if(ins[0]=='.word'):
             for i in range(1,len(ins)):
                 data['.word'].append(int(ins[i]))
+                mm.append(int(ins[i]))
                 count+=1
-
+        
     count = 0
 
     for ins in data_and_text['main']:
@@ -120,6 +131,9 @@ def ins_list(instructions,data_and_text,data,label_address,main):
     for ins in data_and_text['main']:
         if(ins[0] in main.keys()):
             data_and_text['main'].remove(ins)
+        mm.append(ins)
+    print(mm)
+    
 
 def stllflg_t(lock):
     global stall_flag
@@ -149,23 +163,30 @@ def bnflg_f(lock):
     bn_flag = False
     lock.release()
     
-def fetch(lock):
+def fetch(lock):    #
 
     global PC
     global reg_flag
     global stall_flag
     global bn_flag
     global l1i_status
+    global l1i_miss_count
+    global l1i_hit_count
+
+    l1i_hit_count = 0
+    l1i_miss_count = 0
 
     instr = data_and_text['main'][PC]
-    
-    fill_mm(instr)
+    # print(data_and_text['main'].index(instr) == PC)
 
-    if(instr in l1i):
+    if(PC in l1i):
         l1i_status = 'hit'
+        l1i_hit_count += 1
     else:
         l1i_status = 'miss'
-        l1i[]
+        l1i_miss_count += 1
+        l1i[PC] = instr
+    # print(l1i)
 
     if((instr[0] in ins_type1) or (instr[0] in ins_type2) or (instr[0] in ins_type6)):
         regstr = instr[1].replace('$','')
@@ -301,7 +322,7 @@ def decode(parsed_ins,lock):
 
         reg_pattern = re.search(r"\$[a-z0-9]*",parsed_ins[2],re.MULTILINE)
         offset_pattern = re.search(r"\w+",parsed_ins[2],re.MULTILINE)
-
+        
         reg1 = reg_pattern.group(0).replace('$','')
         if(reg_flag[reg1][0]=='e' and reg_flag[reg1][1]=='m'):
             stllflg_t(lock)
@@ -319,11 +340,22 @@ def execute(decoded_ins):
     
     global reg_flag
     global reg
+    global l1d_status
+    global l1d_hit_count
+    global l1d_miss_count
+
+    index = int(math.log(blocks/assoc, 2))
+    offset = int(math.log(block_size, 2))
 
     if(decoded_ins['ins']=='add'):
         regstr = decoded_ins['rd']
         reg1 = decoded_ins['rs']
         reg2 = decoded_ins['rt']
+
+        binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
+        index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index13 = int(binary1[(len(binary1)-offset):], 2)
 
         #forwarding value if already in use
         if(reg_flag[reg1][0]=='m'):
@@ -332,7 +364,21 @@ def execute(decoded_ins):
             value1 = latch_m
         #directly using value
         else:
-            value1 = reg[reg1]
+            # value1 = reg[reg1]
+            if(l1d[index11][index12][index13] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index11][index12][index13] = reg[reg1]
+                value1 = l1d[index11][index12][index13]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index11][index12][index13]
+
+        binary2 = bin(base_address + int(str(reg_address[reg2]), 16))[2:]
+        index21 = int(binary2[(len(binary2)-(offset + index)): len(binary2)-offset], 2)
+        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (blocks/index)
+        index23 = int(binary2[(len(binary2)-offset):], 2)
 
         #forwarding value if already in use
         if(reg_flag[reg2][0]=='m'):
@@ -341,7 +387,16 @@ def execute(decoded_ins):
             value2 = latch_m
         #directly using value
         else:
-            value2 = reg[reg2]
+            # value2 = reg[reg2]
+            if(l1d[index21][index22][index23] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index21][index22][index23] = reg[reg1]
+                value1 = l1d[index21][index22][index23]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index21][index22][index23]
 
         reg_flag[regstr][0] = 'm'
         return (value1+value2,reg)
@@ -351,6 +406,11 @@ def execute(decoded_ins):
         reg1 = decoded_ins['rs']
         reg2 = decoded_ins['rt']
 
+        binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
+        index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index13 = int(binary1[(len(binary1)-offset):], 2)
+
         #forwarding value if already in use
         if(reg_flag[reg1][0]=='m'):
             value1 = latch_e
@@ -358,7 +418,21 @@ def execute(decoded_ins):
             value1 = latch_m
         #directly using value
         else:
-            value1 = reg[reg1]
+            # value1 = reg[reg1]
+            if(l1d[index11][index12][index13] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index11][index12][index13] = reg[reg1]
+                value1 = l1d[index11][index12][index13]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index11][index12][index13]
+
+        binary2 = bin(base_address + int(str(reg_address[reg2]), 16))[2:]
+        index21 = int(binary2[(len(binary2)-(offset + index)): len(binary2)-offset], 2)
+        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (blocks/index)
+        index23 = int(binary2[(len(binary2)-offset):], 2)
 
         #forwarding value if already in use
         if(reg_flag[reg2][0]=='m'):
@@ -367,7 +441,16 @@ def execute(decoded_ins):
             value2 = latch_m
         #directly using value
         else:
-            value2 = reg[reg2]
+            # value2 = reg[reg2]
+            if(l1d[index21][index22][index23] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index21][index22][index23] = reg[reg1]
+                value1 = l1d[index21][index22][index23]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index21][index22][index23]
 
         reg_flag[regstr][0] = 'm'
         return (value1-value2,decoded_ins['rd'])
@@ -377,6 +460,11 @@ def execute(decoded_ins):
         reg1 = decoded_ins['rs']
         reg2 = decoded_ins['rt']
 
+        binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
+        index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index13 = int(binary1[(len(binary1)-offset):], 2)
+
         #forwarding value if already in use
         if(reg_flag[reg1][0]=='m'):
             value1 = latch_e
@@ -384,7 +472,21 @@ def execute(decoded_ins):
             value1 = latch_m
         #directly using value
         else:
-            value1 = reg[reg1]
+            # value1 = reg[reg1]
+            if(l1d[index11][index12][index13] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index11][index12][index13] = reg[reg1]
+                value1 = l1d[index11][index12][index13]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index11][index12][index13]
+
+        binary2 = bin(base_address + int(str(reg_address[reg2]), 16))[2:]
+        index21 = int(binary2[(len(binary2)-(offset + index)): len(binary2)-offset], 2)
+        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (blocks/index)
+        index23 = int(binary2[(len(binary2)-offset):], 2)
 
         #forwarding value if already in use
         if(reg_flag[reg2][0]=='m'):
@@ -393,7 +495,16 @@ def execute(decoded_ins):
             value2 = latch_m
         #directly using value
         else:
-            value2 = reg[reg2]
+            # value2 = reg[reg2]
+            if(l1d[index21][index22][index23] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index21][index22][index23] = reg[reg1]
+                value1 = l1d[index21][index22][index23]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index21][index22][index23]
 
         reg_flag[regstr][0] = 'm'
         return (value1 and value2 ,decoded_ins['rd'])
@@ -403,6 +514,11 @@ def execute(decoded_ins):
         reg1 = decoded_ins['rs']
         reg2 = decoded_ins['rt']
 
+        binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
+        index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index13 = int(binary1[(len(binary1)-offset):], 2)
+
         #forwarding value if already in use
         if(reg_flag[reg1][0]=='m'):
             value1 = latch_e
@@ -410,7 +526,21 @@ def execute(decoded_ins):
             value1 = latch_m
         #directly using value
         else:
-            value1 = reg[reg1]
+            # value1 = reg[reg1]
+            if(l1d[index11][index12][index13] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index11][index12][index13] = reg[reg1]
+                value1 = l1d[index11][index12][index13]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index11][index12][index13]
+
+        binary2 = bin(base_address + int(str(reg_address[reg2]), 16))[2:]
+        index21 = int(binary2[(len(binary2)-(offset + index)): len(binary2)-offset], 2)
+        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (blocks/index)
+        index23 = int(binary2[(len(binary2)-offset):], 2)
 
         #forwarding value if already in use
         if(reg_flag[reg2][0]=='m'):
@@ -419,7 +549,16 @@ def execute(decoded_ins):
             value2 = latch_m
         #directly using value
         else:
-            value2 = reg[reg2]
+            # value2 = reg[reg2]
+            if(l1d[index21][index22][index23] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index21][index22][index23] = reg[reg1]
+                value1 = l1d[index21][index22][index23]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index21][index22][index23]
 
         reg_flag[regstr][0] = 'm'
         return (value1 or value2 ,decoded_ins['rd'])
@@ -429,6 +568,11 @@ def execute(decoded_ins):
         reg1 = decoded_ins['rs']
         reg2 = decoded_ins['rt']
 
+        binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
+        index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index13 = int(binary1[(len(binary1)-offset):], 2)
+
         #forwarding value if already in use
         if(reg_flag[reg1][0]=='m'):
             value1 = latch_e
@@ -436,7 +580,21 @@ def execute(decoded_ins):
             value1 = latch_m
         #directly using value
         else:
-            value1 = reg[reg1]
+            # value1 = reg[reg1]
+            if(l1d[index11][index12][index13] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index11][index12][index13] = reg[reg1]
+                value1 = l1d[index11][index12][index13]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index11][index12][index13]
+
+        binary2 = bin(base_address + int(str(reg_address[reg2]), 16))[2:]
+        index21 = int(binary2[(len(binary2)-(offset + index)): len(binary2)-offset], 2)
+        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (blocks/index)
+        index23 = int(binary2[(len(binary2)-offset):], 2)
 
         #forwarding value if already in use
         if(reg_flag[reg2][0]=='m'):
@@ -445,7 +603,16 @@ def execute(decoded_ins):
             value2 = latch_m
         #directly using value
         else:
-            value2 = reg[reg2]
+            # value2 = reg[reg2]
+            if(l1d[index21][index22][index23] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index21][index22][index23] = reg[reg1]
+                value1 = l1d[index21][index22][index23]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index21][index22][index23]
 
         reg_flag[regstr][0] = 'm'
         #print(value1,value2)
@@ -454,14 +621,19 @@ def execute(decoded_ins):
         else:
             return (0,decoded_ins['rd'])
 
-    elif(decoded_ins['ins']=='lui'):
+    elif(decoded_ins['ins']=='lui'):    
         regstr = decoded_ins['rd']
         reg_flag[regstr][0] = 'm'
         return (decoded_ins['addr'],decoded_ins['rd'])
 
-    elif(decoded_ins['ins']=='lw' or decoded_ins['ins']=='sw'):
+    elif(decoded_ins['ins']=='lw' or decoded_ins['ins']=='sw'):     #
         regstr = decoded_ins['rt']
         reg1 = decoded_ins['rm']
+
+        binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
+        index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index13 = int(binary1[(len(binary1)-offset):], 2)
 
         #forwarding value if already in use
         if(reg_flag[reg1][0]=='m'):
@@ -470,27 +642,51 @@ def execute(decoded_ins):
             value1 = latch_m
         #directly using value
         else:
-            value1 = reg[reg1]
+            # value1 = reg[reg1]
+            if(l1d[index11][index12][index13] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index11][index12][index13] = reg[reg1]
+                value1 = l1d[index11][index12][index13]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index11][index12][index13]
 
-        #print(value1)
+        # print(value1)
         offset = decoded_ins['offset']
         index = 0
         if(int(str(value1),16)-base_address>=0 and (int(str(value1),16)-base_address)%4==0 and offset%4==0):
             index = int((int(str(value1),16)-base_address)/4 + offset/4)
         reg_flag[regstr][0] = 'm'
-        #print(index,decoded_ins)
+        # print(index,decoded_ins)
         return (index,decoded_ins)
 
     elif(decoded_ins['ins']=='addi'):
         regstr = decoded_ins['rd']
         reg1 = decoded_ins['rs']
+
+        binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
+        index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index13 = int(binary1[(len(binary1)-offset):], 2)
+
         if(reg_flag[reg1][0]=='m'):
             value1 = latch_e
         elif(reg_flag[reg1][0]=='w'):
             value1 = latch_m
         #directly using value
         else:
-            value1 = reg[reg1]
+            # value1 = reg[reg1]
+            if(l1d[index11][index12][index13] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index11][index12][index13] = reg[reg1]
+                value1 = l1d[index11][index12][index13]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index11][index12][index13]
 
         reg_flag[regstr][0] = 'm'
         addend = int(decoded_ins['amt'])
@@ -503,26 +699,57 @@ def execute(decoded_ins):
     elif(decoded_ins['ins']=='ori'):
         regstr = decoded_ins['rd']
         reg1 = decoded_ins['rs']
+
+        binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
+        index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index13 = int(binary1[(len(binary1)-offset):], 2)
+
         if(reg_flag[reg1][0]=='m'):
             value1 = latch_e
         elif(reg_flag[reg1][0]=='w'):
             value1 = latch_m
         #directly using value
         else:
-            value1 = reg[reg1]
+            # value1 = reg[reg1]
+            if(l1d[index11][index12][index13] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index11][index12][index13] = reg[reg1]
+                value1 = l1d[index11][index12][index13]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index11][index12][index13]
+
         reg_flag[regstr][0] = 'm'
         return(value1 or decoded_ins['amt'],decoded_ins['rd'])
 
     elif(decoded_ins['ins']=='andi'):
         regstr = decoded_ins['rd']
         reg1 = decoded_ins['rs']
+
+        binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
+        index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index13 = int(binary1[(len(binary1)-offset):], 2)
+
         if(reg_flag[reg1][0]=='m'):
             value1 = latch_e
         elif(reg_flag[reg1][0]=='w'):
             value1 = latch_m
         #directly using value
         else:
-            value1 = reg[reg1]
+            # value1 = reg[reg1]
+            if(l1d[index11][index12][index13] == None):
+                l1d_status = 'miss'
+                l1d_miss_count += 1
+                l1d[index11][index12][index13] = reg[reg1]
+                value1 = l1d[index11][index12][index13]
+            else:
+                l1d_status = 'hit'
+                l1d_hit_count += 1
+                value1 = l1d[index11][index12][index13]
 
         reg_flag[regstr][0] = 'm'
         anded = decoded_ins['amt']
@@ -537,32 +764,72 @@ def memory(execute):
     global reg_flag
     global data
     global reg
+    global l1d_status
+    global l1d_hit_count
+    global l1d_miss_count
 
+    # print(execute)
     if(execute):
         if (type(execute[1]) is dict and 'offset' in execute[1].keys()):
-            index = execute[0]
+            index1 = execute[0]
+            binary1 = bin(base_address + int(str(index1*4), 16))[2:]
+            index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+            index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+            index13 = int(binary1[(len(binary1)-offset):], 2)
+
             if(execute[1]['ins']=='lw'):
                 reg_flag[execute[1]['rt']][0] = 'w'
-                return (data['.word'][index],execute[1]['rt'])
+                # print((data['.word'][index],execute[1]['rt']))
+                if(l1d[index11][index12][index13] == None):
+                    l1d_status = 'miss'
+                    l1d_miss_count += 1
+                    l1d[index11][index12][index13] = mm[index1]
+                    # print(mm[index1])
+                    value1 = l1d[index11][index12][index13]
+                else:
+                    l1d_status = 'hit'
+                    l1d_hit_count += 1
+                    value1 = l1d[index11][index12][index13]
+                # print(value1)
+
+                return (value1, execute[1]['rt'])
 
             elif(execute[1]['ins']=='sw'):
                 reg1 = execute[1]['rt']
+
+                binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
+                index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+                index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+                index13 = int(binary1[(len(binary1)-offset):], 2)
+
                 if(reg_flag[reg1][0]=='w'):
                     value = latch_m
                 else:
-                    value = reg[reg1]
+                    # value = reg[reg1]
+                    if(l1d[index11][index12][index13] == None):
+                        l1d_status = 'miss'
+                        l1d_miss_count += 1
+                        l1d[index11][index12][index13] = reg[reg1]
+                        value = l1d[index11][index12][index13]
+                        # print("reg " + str(reg[reg1]))
+                    else:
+                        l1d_status = 'hit'
+                        l1d_hit_count += 1
+                        value = l1d[index11][index12][index13]
+                    # print(value)
 
-                if(index>=len(data['.word'])):
-                    count = index-len(data['.word'])
+                if(index1>=len(data['.word'])):
+                    count = index1-len(data['.word'])
                     for i in range(count):
                         data['.word'].append(0)
                     data['.word'].append(value)
+                    print(data['.word'])
                     return ()
                 else:
-                    data['.word'][index] = value
+                    data['.word'][index1] = value
                     return ()
         else:
-            reg_flag[execute[0]] = 'w'
+            reg_flag[execute[1]][0] = 'w'
             return execute
     else:
         return ()
