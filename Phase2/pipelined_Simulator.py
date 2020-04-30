@@ -716,7 +716,7 @@ def Simulate():
     ins_list(instructions,data_and_text,data,label_address,main)
 
     process_list = []
-    lock = threading.Lock()
+    lock = threading.Lock() 
     instruction = data_and_text['main']
     
     start1 = time.perf_counter()
