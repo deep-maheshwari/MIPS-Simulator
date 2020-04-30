@@ -4,9 +4,12 @@ import time
 from time import sleep
 import threading
 
-blocks = 64
+l1d_blocks = 32
 block_size = 64
-assoc = 16
+l1d_assoc = 4
+
+l2_blocks = 64
+l2_assoc = 2
 
 reg = {"zero":0, "r0":0, "at":0, "v0":0, "v1":0, "a0":0, "a1":0, "a2":0, "a3":0, "t0":0, "t1":0, "t2":0, "t3":0, "t4":0, "t5":0, "t6":0, "t7":0,"s0":0, "s1":0, "s2":0, "s3":0 ,"s4":0 ,"s5":0, "s6":0, "s7":0, "t8":0, "t9":0, "k0":0, "k1":0, "gp":0, "sp":0, "s8":0, "ra":0}
 reg_flag = {"zero":['',''], "r0":['',''], "at":['',''], "v0":['',''], "v1":['',''], "a0":['',''], "a1":['',''], "a2":['',''], "a3":['',''], "t0":['',''], "t1":['',''], "t2":['',''], "t3":['',''], "t4":['',''], "t5":['',''], "t6":['',''], "t7":['',''],"s0":['',''], "s1":['',''], "s2":['',''], "s3":['',''] ,"s4":['',''] ,"s5":['',''], "s6":['',''], "s7":['',''], "t8":['',''], "t9":['',''], "k0":['',''], "k1":['',''], "gp":['',''], "sp":['',''], "s8":['',''], "ra":['','']}
@@ -17,18 +20,20 @@ data = {'.word':[],'.text':[]}
 
 #Creating cache
 l1d = {}
-j = 0
-for i in range(int(blocks/assoc)):
+for i in range(int(l1d_blocks/l1d_assoc)):
     l1d[i] = {}
-    while(j < blocks):
+    for j in range(l1d_assoc):
         l1d[i][j] = [None]*block_size
-        j += 1
-        if(j % assoc == 0):
-            break
+
 l1i = {}
 l2 = {}
+for i in range(int(l2_blocks/l2_assoc)):
+    l2[i] = {}
+    for j in range(l2_assoc):
+        l2[i][j] = [None]*block_size
+
 mm = []
-index = int(math.log(blocks/assoc, 2))
+index = int(math.log(l1d_blocks/l1d_assoc, 2))
 offset = int(math.log(block_size, 2))
 l1d_hit_count = 0
 l1d_miss_count = 0
@@ -184,6 +189,8 @@ def fetch(lock):    #
 
     instr = data_and_text['main'][PC]
     # print(data_and_text['main'].index(instr) == PC)
+
+    # print(l1d)
 
     if(PC in l1i):
         l1i_status = 'hit'
@@ -350,7 +357,7 @@ def execute(decoded_ins):
     global l1d_hit_count
     global l1d_miss_count
 
-    index = int(math.log(blocks/assoc, 2))
+    index = int(math.log(l1d_blocks/l1d_assoc, 2))
     offset = int(math.log(block_size, 2))
 
     if(decoded_ins['ins']=='add'):
@@ -360,7 +367,7 @@ def execute(decoded_ins):
 
         binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
         index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
-        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index12 = int((int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (l1d_blocks/index))
         index13 = int(binary1[(len(binary1)-offset):], 2)
 
         #forwarding value if already in use
@@ -383,7 +390,7 @@ def execute(decoded_ins):
 
         binary2 = bin(base_address + int(str(reg_address[reg2]), 16))[2:]
         index21 = int(binary2[(len(binary2)-(offset + index)): len(binary2)-offset], 2)
-        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (blocks/index)
+        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (l1d_blocks/index)
         index23 = int(binary2[(len(binary2)-offset):], 2)
 
         #forwarding value if already in use
@@ -414,7 +421,7 @@ def execute(decoded_ins):
 
         binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
         index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
-        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index12 = int((int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (l1d_blocks/index))
         index13 = int(binary1[(len(binary1)-offset):], 2)
 
         #forwarding value if already in use
@@ -437,7 +444,7 @@ def execute(decoded_ins):
 
         binary2 = bin(base_address + int(str(reg_address[reg2]), 16))[2:]
         index21 = int(binary2[(len(binary2)-(offset + index)): len(binary2)-offset], 2)
-        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (blocks/index)
+        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (l1d_blocks/index)
         index23 = int(binary2[(len(binary2)-offset):], 2)
 
         #forwarding value if already in use
@@ -468,7 +475,7 @@ def execute(decoded_ins):
 
         binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
         index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
-        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index12 = int((int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (l1d_blocks/index))
         index13 = int(binary1[(len(binary1)-offset):], 2)
 
         #forwarding value if already in use
@@ -491,7 +498,7 @@ def execute(decoded_ins):
 
         binary2 = bin(base_address + int(str(reg_address[reg2]), 16))[2:]
         index21 = int(binary2[(len(binary2)-(offset + index)): len(binary2)-offset], 2)
-        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (blocks/index)
+        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (l1d_blocks/index)
         index23 = int(binary2[(len(binary2)-offset):], 2)
 
         #forwarding value if already in use
@@ -522,7 +529,7 @@ def execute(decoded_ins):
 
         binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
         index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
-        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index12 = int((int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (l1d_blocks/index))
         index13 = int(binary1[(len(binary1)-offset):], 2)
 
         #forwarding value if already in use
@@ -545,7 +552,7 @@ def execute(decoded_ins):
 
         binary2 = bin(base_address + int(str(reg_address[reg2]), 16))[2:]
         index21 = int(binary2[(len(binary2)-(offset + index)): len(binary2)-offset], 2)
-        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (blocks/index)
+        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (l1d_blocks/index)
         index23 = int(binary2[(len(binary2)-offset):], 2)
 
         #forwarding value if already in use
@@ -576,7 +583,7 @@ def execute(decoded_ins):
 
         binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
         index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
-        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index12 = int((int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (l1d_blocks/index))
         index13 = int(binary1[(len(binary1)-offset):], 2)
 
         #forwarding value if already in use
@@ -599,7 +606,7 @@ def execute(decoded_ins):
 
         binary2 = bin(base_address + int(str(reg_address[reg2]), 16))[2:]
         index21 = int(binary2[(len(binary2)-(offset + index)): len(binary2)-offset], 2)
-        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (blocks/index)
+        index22 = (int(binary2[:(len(binary2)-(offset + index))-1], 2)) % (l1d_blocks/index)
         index23 = int(binary2[(len(binary2)-offset):], 2)
 
         #forwarding value if already in use
@@ -638,7 +645,7 @@ def execute(decoded_ins):
 
         binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
         index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
-        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index12 = int((int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (l1d_blocks/index))
         index13 = int(binary1[(len(binary1)-offset):], 2)
 
         #forwarding value if already in use
@@ -674,7 +681,7 @@ def execute(decoded_ins):
 
         binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
         index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
-        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index12 = int((int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (l1d_blocks/index))
         index13 = int(binary1[(len(binary1)-offset):], 2)
 
         if(reg_flag[reg1][0]=='m'):
@@ -708,7 +715,7 @@ def execute(decoded_ins):
 
         binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
         index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
-        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index12 = int((int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (l1d_blocks/index))
         index13 = int(binary1[(len(binary1)-offset):], 2)
 
         if(reg_flag[reg1][0]=='m'):
@@ -737,7 +744,7 @@ def execute(decoded_ins):
 
         binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
         index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
-        index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+        index12 = int((int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (l1d_blocks/index))
         index13 = int(binary1[(len(binary1)-offset):], 2)
 
         if(reg_flag[reg1][0]=='m'):
@@ -780,7 +787,7 @@ def memory(execute):
             index1 = execute[0]
             binary1 = bin(base_address + int(str(index1*4), 16))[2:]
             index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
-            index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+            index12 = int((int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (l1d_blocks/index))
             index13 = int(binary1[(len(binary1)-offset):], 2)
 
             if(execute[1]['ins']=='lw'):
@@ -805,7 +812,7 @@ def memory(execute):
 
                 binary1 = bin(base_address + int(str(reg_address[reg1]), 16))[2:]
                 index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
-                index12 = (int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (blocks/index)
+                index12 = int((int(binary1[:(len(binary1)-(offset + index))-1], 2)) % (l1d_blocks/index))
                 index13 = int(binary1[(len(binary1)-offset):], 2)
 
                 if(reg_flag[reg1][0]=='w'):
@@ -859,7 +866,9 @@ def pipeline(lock):
     global latch_m
     global stall_flag
 
+    print(PC)
     print(data)
+    print("hits", l1d_hit_count)
 
     #fetch cycle
     start = time.perf_counter()
@@ -913,12 +922,6 @@ def pipeline(lock):
     end = time.perf_counter()
     sleep(1.0-round(end-start,2))
     
-# def CacheCreation(cache_size, block_size, assoc, latency):
-#     l1d = {}
-#     l1i = {}
-#     l2 = {}
-#     mm = {}
-
 def Simulate():
 
     global PC
@@ -932,7 +935,7 @@ def Simulate():
     global stall_flag
     global bn_flag
 
-    instructions = read_instructions(fileHandler("/home/tapish/CO/Project_Phase 1/COproj_phase1/Phase1/bubble_sort.asm"))
+    instructions = read_instructions(fileHandler("/home/tapish/CO/Project_Phase 1/COproj_phase1/Phase1/trial.asm"))
     ins_list(instructions,data_and_text,data,label_address,main)
 
     process_list = []
