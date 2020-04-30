@@ -732,7 +732,7 @@ def Simulate():
         if(stall_flag1==True and bn_flag==True):
             #print('stall2')
             stalls+=2
-            sleep(0.20)
+            sleep(0.200)
     
         elif(stall_flag1==True):
             #print('stall3')
@@ -766,9 +766,9 @@ def Simulate():
     #     pipeline(ins)
 
     end1 = time.perf_counter()
-    print('cycles taken to execute are '+str(count*5+stalls))
+    print('cycles taken to execute are '+str(count+4+stalls))
     print('stalls = '+str(stalls))
-    print('INSTRUCTIONS PER CYCLE = '+str(round(count/((count*5)+stalls),3)))
+    print('INSTRUCTIONS PER CYCLE = '+str(round(count/(4+count+stalls),3)))
     print(reg)
     print(data['.word'])
 
