@@ -13,7 +13,8 @@ main = {}
 PC = 0
 msg = ""
 stalls = 0
-stall_flag = False
+stall_flag1 = False
+stall_flag2 = False
 bn_flag = False
 
 ins_type1 = ['add','sub','and','or','slt']
@@ -112,18 +113,32 @@ def ins_list(instructions,data_and_text,data,label_address,main):
         if(ins[0] in main.keys()):
             data_and_text['main'].remove(ins)
 
-def stllflg_t(lock):
-    global stall_flag
+def stllflg1_t(lock):
+    global stall_flag1
 
     lock.acquire()
-    stall_flag = True
+    stall_flag1 = True
     lock.release()
 
-def stllflg_f(lock):
-    global stall_flag
+def stllflg1_f(lock):
+    global stall_flag1
 
     lock.acquire()
-    stall_flag = False
+    stall_flag1 = False
+    lock.release()
+
+def stllflg2_t(lock):
+    global stall_flag2
+
+    lock.acquire()
+    stall_flag2 = True
+    lock.release()
+
+def stllflg2_f(lock):
+    global stall_flag2
+
+    lock.acquire()
+    stall_flag2 = False
     lock.release()
 
 def bnflg_t(lock):
@@ -144,22 +159,31 @@ def fetch(lock):
 
     global PC
     global reg_flag
-    global stall_flag
+    global stall_flag1
     global bn_flag
 
+    start = time.perf_counter()
     instr = data_and_text['main'][PC]
     
     if((instr[0] in ins_type1) or (instr[0] in ins_type2) or (instr[0] in ins_type6)):
         regstr = instr[1].replace('$','')
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
+        lock.acquire()
         reg_flag[regstr][0] = 'd'
         reg_flag[regstr][1] = 'e'
         PC = PC + 1
+        lock.release()
 
     elif(instr[0]=='lw'):
         regstr = instr[1].replace('$','')
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
+        lock.acquire()
         reg_flag[regstr][0] = 'd'
         reg_flag[regstr][1] = 'm'
         PC = PC + 1
+        lock.release()
 
     elif(instr[0]=='sw'):
         PC+=1
@@ -168,40 +192,33 @@ def fetch(lock):
         reg1 = instr[1].replace('$','')
         reg2 = instr[2].replace('$','')
 
+        #print(reg_flag[reg1],reg_flag[reg2])
         if(reg_flag[reg1][0]=='d' and reg_flag[reg1][1]=='m'):
             #take value from latch_m
-            stllflg_t(lock)
+            stllflg1_t(lock)
             bnflg_t(lock)
-            sleep(2.0)
 
         elif(reg_flag[reg2][0]=='d' and reg_flag[reg2][1]=='m'):
             #take value from latch_m
-            stllflg_t(lock)
+            stllflg1_t(lock)
             bnflg_t(lock)
-            sleep(2.0)
 
         elif(reg_flag[reg1][0]=='e' and reg_flag[reg1][1]=='m'):
             #take value from latch_m
-            stllflg_t(lock)
-            bnflg_t(lock)
-            sleep(2.0)
+            stllflg1_t(lock)
 
         elif(reg_flag[reg2][0]=='e' and reg_flag[reg2][1]=='m'):
             #take value from latch_m
             #print('hell')
-            stllflg_t(lock)
-            bnflg_t(lock)
-            sleep(2.0)
+            stllflg1_t(lock)
 
         elif(reg_flag[reg1][0]=='d' and reg_flag[reg1][1]=='e'):
             #take value from latch_e
-            stllflg_t(lock)
-            sleep(1.0)
+            stllflg1_t(lock)
 
         elif(reg_flag[reg2][0]=='d' and reg_flag[reg2][1]=='e'):
             #take value from latch_e
-            stllflg_t(lock)
-            sleep(1.0)
+            stllflg1_t(lock)
 
         #print(PC)
     return instr
@@ -211,7 +228,8 @@ def decode(parsed_ins,lock):
     global main
     global PC
     global reg_flag
-    global stall_flag
+    global stall_flag2
+    start = time.perf_counter()
 
     if(parsed_ins[0]=='add' or parsed_ins[0]=='sub' or parsed_ins[0]=='and' or parsed_ins[0]=='or' or parsed_ins[0]=='slt'):
         regstr = parsed_ins[1].replace('$','')
@@ -220,11 +238,14 @@ def decode(parsed_ins,lock):
         reg2 = parsed_ins[3].replace('$','')
 
         if(reg_flag[reg1][0]=='e' and reg_flag[reg1][1]=='m'):
-            stllflg_t(lock)
-        if(reg_flag[reg2][0]=='e' and reg_flag[reg2][1]=='m'):
-            stllflg_t(lock)
-
+            stllflg2_t(lock)
+        elif(reg_flag[reg2][0]=='e' and reg_flag[reg2][1]=='m'):
+            stllflg2_t(lock)
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
+        lock.acquire()
         reg_flag[regstr][0] = 'e'
+        lock.release()
         return {'ins':parsed_ins[0],'rd':parsed_ins[1].replace('$',''),'rs':parsed_ins[2].replace('$',''),'rt':parsed_ins[3].replace('$','')}
     
     elif(parsed_ins[0]=='sll' or parsed_ins[0]=='srl' or parsed_ins[0]=='andi' or parsed_ins[0]=='ori' or parsed_ins[0]=='addi'):
@@ -233,16 +254,21 @@ def decode(parsed_ins,lock):
         reg1 = parsed_ins[2].replace('$','')
 
         if(reg_flag[reg1][0]=='e' and reg_flag[reg1][1]=='m'):
-            stllflg_t(lock)
-
+            stllflg2_t(lock)
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
+        lock.acquire()
         reg_flag[regstr][0] = 'e'
+        lock.release()
         return {'ins':parsed_ins[0],'rd':parsed_ins[1].replace('$',''),'rs':parsed_ins[2].replace('$',''),'amt':parsed_ins[3]}
     
     elif(parsed_ins[0]=='bne' or parsed_ins[0]=='beq'):
         rs = parsed_ins[1].replace('$','')
         rt = parsed_ins[2].replace('$','')
         addr = parsed_ins[3]
-
+        value1 = 0
+        value2 = 0
+        #print(reg_flag[rs],reg_flag[rt])
         if(reg_flag[rs][0]=='w'):
             value1 = latch_m
         elif(reg_flag[rs][0]=='m'):
@@ -286,22 +312,29 @@ def decode(parsed_ins,lock):
 
         reg1 = reg_pattern.group(0).replace('$','')
         if(reg_flag[reg1][0]=='e' and reg_flag[reg1][1]=='m'):
-            stllflg_t(lock)
+            stllflg2_t(lock)
 
         if(parsed_ins[0]=='lw'):
+            end = time.perf_counter()
+            sleep(0.09-round(end-start,3))
             reg_flag[regstr][0]='e'
         return {'ins':parsed_ins[0],'rt':parsed_ins[1].replace('$',''),'rm':reg_pattern.group(0).replace('$',''),'offset':int(offset_pattern.group(0))}
 
     elif(parsed_ins[0]=='lui'):
         regstr = parsed_ins[1].replace('$','')
-
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
         reg_flag[regstr][0]='e'
-        return {'ins':parsed_ins[0],'rd':parsed_ins[1].replace('$',''),'addr':hex(int(parsed_ins[2]+'0000',16)),'stall_flag':False}
+        return {'ins':parsed_ins[0],'rd':parsed_ins[1].replace('$',''),'addr':hex(int(parsed_ins[2]+'0000',16))}
+
+    elif(parsed_ins[0]=='jr'):
+        return {'ins':parsed_ins[0]}
 
 def execute(decoded_ins):
     
     global reg_flag
     global reg
+    start = time.perf_counter()
 
     if(decoded_ins['ins']=='add'):
         regstr = decoded_ins['rd']
@@ -326,6 +359,8 @@ def execute(decoded_ins):
         else:
             value2 = reg[reg2]
 
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
         reg_flag[regstr][0] = 'm'
         return (value1+value2,reg)
 
@@ -351,7 +386,8 @@ def execute(decoded_ins):
         #directly using value
         else:
             value2 = reg[reg2]
-
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
         reg_flag[regstr][0] = 'm'
         return (value1-value2,decoded_ins['rd'])
 
@@ -377,7 +413,8 @@ def execute(decoded_ins):
         #directly using value
         else:
             value2 = reg[reg2]
-
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
         reg_flag[regstr][0] = 'm'
         return (value1 and value2 ,decoded_ins['rd'])
 
@@ -403,7 +440,8 @@ def execute(decoded_ins):
         #directly using value
         else:
             value2 = reg[reg2]
-
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
         reg_flag[regstr][0] = 'm'
         return (value1 or value2 ,decoded_ins['rd'])
 
@@ -411,7 +449,8 @@ def execute(decoded_ins):
         regstr = decoded_ins['rd']
         reg1 = decoded_ins['rs']
         reg2 = decoded_ins['rt']
-
+        value1 = 0
+        value2 = 0
         #forwarding value if already in use
         if(reg_flag[reg1][0]=='m'):
             value1 = latch_e
@@ -430,6 +469,8 @@ def execute(decoded_ins):
         else:
             value2 = reg[reg2]
 
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
         reg_flag[regstr][0] = 'm'
         #print(value1,value2)
         if(value1 < value2):
@@ -439,6 +480,8 @@ def execute(decoded_ins):
 
     elif(decoded_ins['ins']=='lui'):
         regstr = decoded_ins['rd']
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
         reg_flag[regstr][0] = 'm'
         return (decoded_ins['addr'],decoded_ins['rd'])
 
@@ -461,6 +504,8 @@ def execute(decoded_ins):
         if(int(str(value1),16)-base_address>=0 and (int(str(value1),16)-base_address)%4==0 and offset%4==0):
             index = int((int(str(value1),16)-base_address)/4 + offset/4)
         if(decoded_ins['ins']=='lw'):
+            end = time.perf_counter()
+            sleep(0.09-round(end-start,3))
             reg_flag[regstr][0] = 'm'
         #print(index,decoded_ins)
         return (index,decoded_ins)
@@ -468,6 +513,8 @@ def execute(decoded_ins):
     elif(decoded_ins['ins']=='addi'):
         regstr = decoded_ins['rd']
         reg1 = decoded_ins['rs']
+        value1 = 0
+        value2 = 0
         if(reg_flag[reg1][0]=='m'):
             value1 = latch_e
         elif(reg_flag[reg1][0]=='w'):
@@ -476,6 +523,8 @@ def execute(decoded_ins):
         else:
             value1 = reg[reg1]
 
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
         reg_flag[regstr][0] = 'm'
         addend = int(decoded_ins['amt'])
 
@@ -494,12 +543,16 @@ def execute(decoded_ins):
         #directly using value
         else:
             value1 = reg[reg1]
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
         reg_flag[regstr][0] = 'm'
         return(value1 or decoded_ins['amt'],decoded_ins['rd'])
 
     elif(decoded_ins['ins']=='andi'):
         regstr = decoded_ins['rd']
         reg1 = decoded_ins['rs']
+        value1 = 0
+        value2 = 0
         if(reg_flag[reg1][0]=='m'):
             value1 = latch_e
         elif(reg_flag[reg1][0]=='w'):
@@ -508,6 +561,8 @@ def execute(decoded_ins):
         else:
             value1 = reg[reg1]
 
+        end = time.perf_counter()
+        sleep(0.09-round(end-start,3))
         reg_flag[regstr][0] = 'm'
         anded = decoded_ins['amt']
         result = hex(int(value1,16)&int(anded,16))
@@ -521,11 +576,13 @@ def memory(execute):
     global reg_flag
     global data
     global reg
-
+    start = time.perf_counter()
     if(execute):
         if (type(execute[1]) is dict and 'offset' in execute[1].keys()):
             index = execute[0]
             if(execute[1]['ins']=='lw'):
+                end = time.perf_counter()
+                sleep(0.09-round(end-start,3))
                 reg_flag[execute[1]['rt']][0] = 'w'
                 return (data['.word'][index],execute[1]['rt'])
 
@@ -546,6 +603,8 @@ def memory(execute):
                     data['.word'][index] = value
                     return ()
         else:
+            end = time.perf_counter()
+            sleep(0.09-round(end-start,3))
             reg_flag[execute[1]][0] = 'w'
             return execute
     else:
@@ -554,11 +613,13 @@ def memory(execute):
 def writeback(result):
         global reg_flag
         global reg
-
+        start = time.perf_counter()
         if(result):
             regstr = result[1]
             value = result[0]
             reg[regstr] = value
+            end = time.perf_counter()
+            sleep(0.09-(round(start-end,3)))
             reg_flag[regstr] = ['','']             
 
 def pipeline(lock):
@@ -568,11 +629,12 @@ def pipeline(lock):
     global latch_e
     global latch_d
     global latch_m
-    global stall_flag
-
-    print(data)
+    global stall_flag1
+    global stall_flag2
 
     #fetch cycle
+    print(PC)
+    sleep(0.10)
     start = time.perf_counter()
     f = fetch(lock)
     if(f):
@@ -580,15 +642,22 @@ def pipeline(lock):
         latch_f = f
         lock.release()
     end = time.perf_counter()
-    if(end-start<1):
-        sleep(1.0-round(end-start,2))
-    else:
-        sleep(1.0)
-    if(stall_flag==True):
-        sleep(1.0)
-        stllflg_f(lock)
+    sleep(0.100-round(end-start,3))
+    if(stall_flag2==True):
+        sleep(0.05)
+        stllflg2_f(lock)
+        sleep(0.05)
+    if(stall_flag1==True and bn_flag==True):
+        sleep(0.100)
+        stllflg1_f(lock)
+        bnflg_f(lock)
+        sleep(0.100)
+    elif(stall_flag1==True):
+        sleep(0.05)
+        stllflg1_f(lock)
+        sleep(0.05)
+    sleep(0.10)
     #decode cycle
-    sleep(0.5)
     start = time.perf_counter()
     d = decode(f,lock)
     if(d):
@@ -596,10 +665,12 @@ def pipeline(lock):
         latch_d = d
         lock.release()
     end = time.perf_counter()
-    sleep(0.5-round(end-start,2))
-    if(stall_flag==True):
-        sleep(1.0)
-        stllflg_f(lock)
+    sleep(0.100-round(end-start,3))
+    if(stall_flag2==True):
+        sleep(0.05)
+        stllflg2_f(lock)
+        sleep(0.05)
+    sleep(0.10)
     #execute cycle
     start = time.perf_counter()
     e = execute(d)
@@ -608,7 +679,8 @@ def pipeline(lock):
         latch_e = e[0]
         lock.release()
     end = time.perf_counter()
-    sleep(1.0-round(end-start,2))
+    sleep(0.100-round(end-start,3))
+    sleep(0.10)
     #memory cycle
     start = time.perf_counter()
     m = memory(e)
@@ -617,12 +689,13 @@ def pipeline(lock):
         latch_m = m[0]
         lock.release()
     end = time.perf_counter()
-    sleep(1.0-round(end-start,2))
+    sleep(0.100-round(end-start,3))
+    sleep(0.10)
     #writeback cycle
     start = time.perf_counter()
     w = writeback(m)
     end = time.perf_counter()
-    sleep(1.0-round(end-start,2))
+    sleep(0.100-round(end-start,3))
     
 def Simulate():
 
@@ -634,10 +707,12 @@ def Simulate():
     global latch_e
     global latch_m
     global reg_flag
-    global stall_flag
+    global stall_flag1
+    global stall_flag2
     global bn_flag
+    global stalls
 
-    instructions = read_instructions(fileHandler("C:/Users/Admin/Documents/4th semester/Computer Organisation/Lab_project/COproj/Phase1/trial.asm"))
+    instructions = read_instructions(fileHandler("C:/Users/Admin/Documents/4th semester/Computer Organisation/Lab_project/COproj/Phase1/bubble_sort.asm"))
     ins_list(instructions,data_and_text,data,label_address,main)
 
     process_list = []
@@ -649,30 +724,38 @@ def Simulate():
 
     while(PC<len(instruction)-1):
         start = time.perf_counter()
-        if(stall_flag==True and bn_flag==True):
-            sleep(2.0)
-            stllflg_f(lock)
-            bnflg_f(lock)
+        if(stall_flag2==True):
+            #print('stall1')
+            stalls+=1
+            sleep(0.100)
 
-        elif(stall_flag==True):
-            sleep(1.0)
-            stllflg_f(lock)
+        if(stall_flag1==True and bn_flag==True):
+            #print('stall2')
+            stalls+=2
+            sleep(0.20)
+    
+        elif(stall_flag1==True):
+            #print('stall3')
+            stalls+=1
+            sleep(0.100)
 
         if(len(latch_f)>0):
-            if(latch_f[0] in ins_type5 or latch_f[0] in ins_type3):
-                sleep(1.0)
+            if((latch_f[0] in ins_type5) or (latch_f[0] in ins_type3)):
+                #print('bne comp stall')
+                stalls+=1
+                sleep(0.100)
         
         p = threading.Thread(target=pipeline,args=(lock,))
         process_list.append(p)
         if(count>=5):
             process_list[count-5].join()
+        end = time.perf_counter()
         process_list[count].start()
         count+=1
-        end = time.perf_counter()
-        if(round(end-start,2)<1.0):
-            sleep(1.0-round(end-start,2))
+        if(round(end-start,3)>=0.100):
+            sleep(0.300)
         else:
-            sleep(1.0-round((end-start)/10,2))
+            sleep(0.300-round((end-start),3))
         # print(reg)
         # print(data['.word'])
 
@@ -683,9 +766,9 @@ def Simulate():
     #     pipeline(ins)
 
     end1 = time.perf_counter()
-    print(round(end1-start1,3))
-    print(count)
-    print()
+    print('cycles taken to execute are '+str(count*5+stalls))
+    print('stalls = '+str(stalls))
+    print('INSTRUCTIONS PER CYCLE = '+str(round(count/((count*5)+stalls),3)))
     print(reg)
     print(data['.word'])
 

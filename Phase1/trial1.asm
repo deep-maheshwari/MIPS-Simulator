@@ -1,6 +1,6 @@
 .data
 array:
-	.word 5,4,3
+	.word 1,2,3
 	.word 2
 	.word 0
 	.word 1
