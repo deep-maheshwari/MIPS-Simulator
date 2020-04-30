@@ -14,7 +14,7 @@ In the above file specify path for Phase1/bubble_sort.asm file in Simulate funct
 The Phase 2 required to form a pipelined simulation of MIPS assembler and use data forwarding.
 Final output of the program will be number of stalls and Instructions per cycle(IPC).
 
-Simulation Procedure
+Simulation Procedure:-
 -
 
 1)We have implemented the simulation using threading in python.
@@ -34,10 +34,12 @@ Drawbacks:-
 
 1)The threading requires precise synchronization which is missing in our program hence sometimes the output is incorrect or program crashes.
 
-2)Whenever the error "Sleep length must be positive......" is encountered program needs to be stopped and re-run in preferably new terminal.
+2)Whenever the error "Sleep length must be positive......" is encountered program needs to be --stopped-- and re-run in preferably new terminal.
 
 3)If the output is unsorted then again we need to re-run the program(Synchronization is the soul cause of such error where we could not do any good to resolve error.)
 
 By -----
+
 Deep - CS18B008
+
 Tapish - CS18B038
