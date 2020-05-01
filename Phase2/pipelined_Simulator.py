@@ -165,6 +165,8 @@ def fetch(lock):
     start = time.perf_counter()
     instr = data_and_text['main'][PC]
     
+    print(PC)
+
     if((instr[0] in ins_type1) or (instr[0] in ins_type2) or (instr[0] in ins_type6)):
         regstr = instr[1].replace('$','')
         end = time.perf_counter()
@@ -633,16 +635,16 @@ def pipeline(lock):
     global stall_flag2
 
     #fetch cycle
-    print(PC)
     sleep(0.10)
     start = time.perf_counter()
     f = fetch(lock)
     if(f):
-        lock.acquire()
         latch_f = f
-        lock.release()
     end = time.perf_counter()
-    sleep(0.100-round(end-start,3))
+    try:
+        sleep(0.100-round(end-start,3))
+    except:
+        pass
     if(stall_flag2==True):
         sleep(0.05)
         stllflg2_f(lock)
@@ -665,7 +667,10 @@ def pipeline(lock):
         latch_d = d
         lock.release()
     end = time.perf_counter()
-    sleep(0.100-round(end-start,3))
+    try:
+        sleep(0.100-round(end-start,3))
+    except:
+        pass
     if(stall_flag2==True):
         sleep(0.05)
         stllflg2_f(lock)
@@ -679,7 +684,10 @@ def pipeline(lock):
         latch_e = e[0]
         lock.release()
     end = time.perf_counter()
-    sleep(0.100-round(end-start,3))
+    try:
+        sleep(0.100-round(end-start,3))
+    except:
+        pass
     sleep(0.10)
     #memory cycle
     start = time.perf_counter()
@@ -689,13 +697,19 @@ def pipeline(lock):
         latch_m = m[0]
         lock.release()
     end = time.perf_counter()
-    sleep(0.100-round(end-start,3))
+    try:
+        sleep(0.100-round(end-start,3))
+    except:
+        pass
     sleep(0.10)
     #writeback cycle
     start = time.perf_counter()
     w = writeback(m)
     end = time.perf_counter()
-    sleep(0.100-round(end-start,3))
+    try:
+        sleep(0.100-round(end-start,3))
+    except:
+        pass
     
 def Simulate():
 
