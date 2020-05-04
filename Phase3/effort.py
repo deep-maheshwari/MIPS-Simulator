@@ -1,3 +1,4 @@
+import math
 # reg = {"zero":0, "r0":0, "at":0, "v0":0, "v1":0, "a0":0, "a1":0, "a2":0, "a3":0, "t0":0, "t1":0, "t2":0, "t3":0, "t4":0, "t5":0, "t6":0, "t7":0,"s0":0, "s1":0, "s2":0, "s3":0 ,"s4":0 ,"s5":0, "s6":0, "s7":0, "t8":0, "t9":0, "k0":0, "k1":0, "gp":0, "sp":0, "s8":0, "ra":0}
 # address = 0x10015000
 # for val in reg:
@@ -41,35 +42,47 @@
 #         3: {48: [None]*64, 49: [None]*64, 50: [None]*64, 51: [None]*64, 52: [None]*64, 53: [None]*64, 54: [None]*64, 55: [None]*64, 56: [None]*64, 57: [None]*64, 58: [None]*64, 59: [None]*64, 60: [None]*64, 61: [None]*64, 62: [None]*64, 63: [None]*64}
 # }
 
-l1d_blocks = 64
+blocks = 64
 block_size = 4
-l1d_assoc = 4
+set_assoc = 4
 
-l1d = {}
+cache = {}
 
-for i in range(int(l1d_blocks/l1d_assoc)):
-    l1d[i] = {}
-    for j in range(l1d_assoc):
-        l1d[i][j] = [None]*block_size
+for i in range(int(blocks/set_assoc)):
+    cache[i] = {}
+    for j in range(set_assoc):
+        cache[i][j] = (0, ['']*block_size)
+print(cache)
 
-# l1d[0][0] = [None]*2
+# index = int(math.log(l1d_blocks/l1d_assoc, 2))
+# offset = int(math.log(block_size, 2))
 
-print(l1d)
+# binary1 = bin(1098)[2:]
+# index11 = int(binary1[(len(binary1)-(offset + index)): len(binary1)-offset], 2)
+# index12 = int((int(binary1[:(len(binary1)-(offset + index))], 2)) % assoc)
+# index13 = int(binary1[(len(binary1)-offset):], 2)
 
-{0: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]},
- 1: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 2: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 3: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 4: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 5: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 6: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 7: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 8: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 9: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 10: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 11: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 12: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 13: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 14: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}, 
- 15: {0: [None, None, None, None], 1: [None, None, None, None], 2: [None, None, None, None], 3: [None, None, None, None]}
+# print(len(binary1)-(offset + index))
+# print(binary1)
+# print(index11)
+# # print(int(binary1[:5], 2))
+# print(index12)
+# print(index13)
+
+{0: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])},
+ 1: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 2: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 3: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 4: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 5: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 6: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 7: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 8: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 9: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 10: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 11: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 12: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 13: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 14: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}, 
+ 15: {0: (0, ['', '', '', '']), 1: (0, ['', '', '', '']), 2: (0, ['', '', '', '']), 3: (0, ['', '', '', ''])}
 }
