@@ -17,9 +17,10 @@ class Cache:
         self.set_assoc = set_assoc
 
         for i in range(int(blocks/set_assoc)):
-            self.cache[i] = {}
+            self.cache[i] = []
             for j in range(set_assoc):
-                self.cache[i][j] = (0, ['']*block_size)
+                self.cache[i].append({})
+                self.cache[i][j]['a'] = (0, ['']*block_size)
             
 
     def Cache_controller(self, address):
@@ -39,34 +40,47 @@ class Cache:
                 temp.append('')
             else:
                 temp.append(data['.word'][address + count])
-        location = self.cache[modified_address['index']][modified_address['tag']][1]
-        if(location != ['']*self.block_size):                       #check
+
+        valid = 0
+        st = self.cache[modified_address['index']]
+        for i in range(self.set_assoc):
+            if(st[i].key() == 'a'):
+                st[i][modified_address['tag']][1] = temp
+                valid = 1
+                break
+
+        if(valid == 0):                       
             self.replace(temp, policy, modified_address)
-        else:
-            location = temp
     
     def search(self, modified_address, address):
-        location = self.cache[modified_address['index']][modified_address['tag']][1][modified_address['offset']]
-        if(location == ''):
+        st = self.cache[modified_address['index']]
+        found = 0
+        for i in range(self.set_assoc):
+            if(modified_address['tag'] == st[i].key()):
+                found = 1
+                return st[i][modified_address['tag']][1][modified_address['offset']]
+
+        if(found == 0):
             self.miss_count += 1
             self.place_block(address, modified_address)
             return {}
-        else:
-            return location
     
+    def write_value(self, value, modified_address, address):
+        location = self.search(modified_address, address)
+        if(location != {}):
+            location = value                #either change or add the value at the exact location (using offset)
+        else:
+            self.place_block(address, modified_address)
+
+
     def write_block(self, address, modified_address):
-        location = self.cache[modified_address['index']][modified_address['tag']][1]
+        new_data = self.search(modified_address, address)
+        # I think this new_data can never be empty as we will take care of it in new.py
         address = address - (address % self.block_size)
-        data['.word'][address: address + self.block_size] = location
+        data['.word'][address: address + self.block_size] = new_data
 
     def lru_policy(self, modified_address):
-        tag = 0
-        min = self.cache[modified_address['index'][tag][0]]
-        for i in range(self.set_assoc):                                     #depends on how the tags are, change it if required
-            if(min > self.cache[modified_address['index']][i][0]):
-                min = self.cache[modified_address['index']][i][0]
-                tag = i
-        return self.cache[modified_address['index']][tag][1]
+        
                 
     def replace(self, new_block, policy, modified_address):
         if(policy == 'lru'):
