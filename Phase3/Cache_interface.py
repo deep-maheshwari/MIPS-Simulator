@@ -26,6 +26,18 @@ class Cache:
             print(i,self.cache[i])
         print('-----------------------------------')
 
+    def store_cache(self):
+        output = []
+        output.append(int(self.blocks/self.set_assoc))
+        output.append(self.set_assoc)
+        output.append(self.block_size)
+        for k in range(self.block_size):
+            for i in range(int(self.blocks/self.set_assoc)):
+                for j in range(self.set_assoc):
+                    output.append([self.cache[i][j][next(iter(self.cache[i][j]))][0], self.cache[i][j][next(iter(self.cache[i][j]))][1][k]])
+        
+        return output
+
     def Cache_controller(self, address):
         address = '{:032b}'.format(address)
         #print(address)
@@ -42,7 +54,8 @@ class Cache:
             temp = []
             count = 0
             while(count < self.block_size):
-                if(address + count > len(data['.word'])):
+                # print(address, count, len(data['.word']))
+                if(address + count >= len(data['.word'])):
                     temp.append('')
                 else:
                     temp.append(data['.word'][address + count])

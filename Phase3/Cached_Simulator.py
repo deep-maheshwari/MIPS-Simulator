@@ -1,5 +1,5 @@
 import re
-import pandas as pd
+# import pandas as pd
 from Cache_interface import Cache
 
 reg = {"zero":0, "r0":0, "at":0, "v0":0, "v1":0, "a0":0, "a1":0, "a2":0, "a3":0, "t0":0, "t1":0, "t2":0, "t3":0, "t4":0, "t5":0, "t6":0, "t7":0,"s0":0, "s1":0, "s2":0, "s3":0 ,"s4":0 ,"s5":0, "s6":0, "s7":0, "t8":0, "t9":0, "k0":0, "k1":0, "gp":0, "sp":0, "s8":0, "ra":0}
@@ -39,6 +39,54 @@ latch_e = 0
 latch_m = 0
 
 ins_queue = []
+
+def reinitialize():
+    global reg
+    global reg_flag
+    global base_address
+    global data_and_text
+    global data
+    global label_address
+    global main
+    global PC
+    global stalls
+    global mem_stalls
+    global write_stall
+    global stall_flag1
+    global stall_flag2
+    global stall_flag3
+    global bn_flag
+    global ms_flag1
+    global ms_flag2
+    global wr_flag
+    global latch_f
+    global latch_d
+    global latch_e
+    global latch_m
+    global ins_queue
+    reg = {"zero":0, "r0":0, "at":0, "v0":0, "v1":0, "a0":0, "a1":0, "a2":0, "a3":0, "t0":0, "t1":0, "t2":0, "t3":0, "t4":0, "t5":0, "t6":0, "t7":0,"s0":0, "s1":0, "s2":0, "s3":0 ,"s4":0 ,"s5":0, "s6":0, "s7":0, "t8":0, "t9":0, "k0":0, "k1":0, "gp":0, "sp":0, "s8":0, "ra":0}
+    reg_flag = {"zero":['',''], "r0":['',''], "at":['',''], "v0":['',''], "v1":['',''], "a0":['',''], "a1":['',''], "a2":['',''], "a3":['',''], "t0":['',''], "t1":['',''], "t2":['',''], "t3":['',''], "t4":['',''], "t5":['',''], "t6":['',''], "t7":['',''],"s0":['',''], "s1":['',''], "s2":['',''], "s3":['',''] ,"s4":['',''] ,"s5":['',''], "s6":['',''], "s7":['',''], "t8":['',''], "t9":['',''], "k0":['',''], "k1":['',''], "gp":['',''], "sp":['',''], "s8":['',''], "ra":['','']}
+    base_address = 0x10010000
+    data_and_text = {'data':[],'main':[]}
+    data = {'.word':[],'.text':[]}
+    label_address = {}
+    main = {}
+    PC = 0
+    stalls = 0
+    mem_stalls = 0
+    write_stall = 0
+    stall_flag1 = False
+    stall_flag2 = False
+    stall_flag3 = False
+    bn_flag = False
+    ms_flag1 = False
+    ms_flag2 = False
+    wr_flag = False
+    latch_f = []
+    latch_d = {}
+    latch_e = 0
+    latch_m = 0
+    ins_queue = []
 
 def fileHandler(filename):
 
@@ -162,31 +210,31 @@ def bnflg_f():
 
     bn_flag = False
     
-def print_stages(lst):
-    flag = False
-    mark = 1
-    for i in range(5,len(lst)):
-        if(flag==False):
-            if(lst[i][0]!='w'):
-                for _ in range(mark):
-                    lst[i].insert(0,' ')
-                flag = True
-            else:
-                for _ in range(mark):
-                    lst[i].insert(0,' ')
-                mark+=1
-        else:
-            if(lst[i][0]=='w'):
-                flag = False
-            for _ in range(mark):
-                lst[i].insert(0," ")
-            mark+=1
+# def print_stages(lst):
+#     flag = False
+#     mark = 1
+#     for i in range(5,len(lst)):
+#         if(flag==False):
+#             if(lst[i][0]!='w'):
+#                 for _ in range(mark):
+#                     lst[i].insert(0,' ')
+#                 flag = True
+#             else:
+#                 for _ in range(mark):
+#                     lst[i].insert(0,' ')
+#                 mark+=1
+#         else:
+#             if(lst[i][0]=='w'):
+#                 flag = False
+#             for _ in range(mark):
+#                 lst[i].insert(0," ")
+#             mark+=1
 
-    cols = []
-    for i in range(174):
-        cols.append('c'+str(i+1))
-    df = pd.DataFrame(lst,columns=cols)
-    df.to_excel('new_new_cycles.xlsx',header=False,index=False)
+#     cols = []
+#     for i in range(174):
+#         cols.append('c'+str(i+1))
+#     df = pd.DataFrame(lst,columns=cols)
+#     df.to_excel('new_new_cycles.xlsx',header=False,index=False)
 
 def fetch():
 
@@ -782,7 +830,10 @@ def pipeline(ins):
 def Simulate():
     global stalls
 
-    instructions = read_instructions(fileHandler("C:/Users/Admin/Documents/4th semester/Computer Organisation/Lab_project/COproj/Phase1/bubble_sort.asm"))
+    file = open("loaded_file.txt", "r")
+    file_address = file.read()
+
+    instructions = read_instructions(fileHandler(str(file_address)))
     ins_list(instructions,data_and_text,data,label_address,main)
 
     process = ()
@@ -803,6 +854,12 @@ def Simulate():
     print('--------------------------------------')
     print('Instructions per cycle = '+str(round((process[1]-stalls)/process[1],3)))
     print(data['.word'])
+
+    file = open("Cache.txt", 'w')
+    file.write(str(L1.store_cache()))   
+    file.write("\n")
+    file.write(str(L2.store_cache()))
+    file.close()
 
 if __name__== "__main__":
     Simulate()
