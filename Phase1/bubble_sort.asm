@@ -1,7 +1,7 @@
 .data
 array:
-	.word 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
-	.word 10
+	.word 3,2,1
+	.word 2
 	.word 0
 	.word 1
 .text
@@ -10,10 +10,10 @@ array:
 main:
 	
 	lui $s0 , 0x1001
-	lw $t1 , 44($s0)
-	lw $t3, 52($s0)
-	lw $t2, 48($s0)
-	lw $t4, 48($s0)
+	lw $t1 , 12($s0)
+	lw $t3, 20($s0)
+	lw $t2, 16($s0)
+	lw $t4, 16($s0)
 	
 	big_while:
 		
@@ -38,7 +38,7 @@ main:
 	bne $t2, $t1, sm_while
 
 	lui $s0, 0x1001
-	lw $t2, 48($s0)
+	lw $t2, 16($s0)
 	addi $t4, $t4, 1
 	bne $t4, $t1, big_while
 	
