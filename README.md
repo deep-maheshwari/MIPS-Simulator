@@ -1,11 +1,11 @@
 # COproj
 
-The simulator phase 1
+The Simulator Phase 1
 -
 
 Run the file Phase1/GUI.py
 
-The simulator phase 2
+The Simulator Phase 2
 -
 
 Run the file Phase2/pipelined_simulator.py
@@ -37,6 +37,12 @@ Drawbacks:-
 2)Whenever the error "Sleep length must be positive......" is encountered program needs to be --stopped-- and re-run in preferably new terminal.
 
 3)If the output is unsorted then again we need to re-run the program(Synchronization is the soul cause of such error where we could not do any good to resolve error.)
+
+The Simulator Phase 3
+-
+
+Run the file Phase3/Cached_Simulator.py
+In the above file, the user will be asked to enter the details of cache L1 nd L2 (here, we used two levels of Cache named L1 and L2) such as block size, set associativity and number of blocks of cache.
 
 By -----
 
