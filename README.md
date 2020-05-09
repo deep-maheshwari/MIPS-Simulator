@@ -77,7 +77,7 @@ Overall Simulation
 
 Run the file named GUI.py which will show a desktop app. This is made using a library of Python, 'Tkinter'. The desktop app contains a few options such as Load File, Run File(only), Run File Step-by-Step, Run file and Show Memory and Cache, etc. which shows everything from all the phases on the display.
 
-![Alt text](/COproj/Images/Screenshot (6).png?raw=true "Caches")
+![Alt text](/Images/Screenshot (6).png?raw=true "Caches")
 
 
 By -----
