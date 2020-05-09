@@ -8,11 +8,29 @@ Run the file Phase1/GUI.py
 The Simulator Phase 2
 -
 
-Run the file Phase2/pipelined_simulator.py
-In the above file specify path for Phase1/bubble_sort.asm file in Simulate function line no. 715
+Run the file Phase2/Pipelined_simulator.py
+In the above file specify path for Phase1/bubble_sort.asm file in Simulate function line no. 716
 
 The Phase 2 required to form a pipelined simulation of MIPS assembler and use data forwarding.
-Final output of the program will be number of stalls and Instructions per cycle(IPC).
+Final output of the program will be number of stalls, sorted data (bubble_sort.asm as input) and Instructions per cycle(IPC).
+
+Simulation Procedure:-
+-
+
+1) This program will simulate these discrete events in a longitudinal way in which the order of stages is WB, MEM, EX, ID, IF.
+
+2) The program finally calculates the cycles by taking into account stalls and data forwarding through latches according to MIPS format.
+
+3) The cycle data is generated in an Excel Sheet which is modified and attached in Phase2/cycles.xlsx which gives the timeline of cycles being executed along with the stalls. Its screenshot is attached below:
+
+
+
+
+Threaded Simulation (Optional):-
+-
+
+Run the file Phase2/Threaded_Simulator.py
+In the above file specify path for Phase1/bubble_sort.asm file in Simulate function line no. 729
 
 Simulation Procedure:-
 -
@@ -42,7 +60,24 @@ The Simulator Phase 3
 -
 
 Run the file Phase3/Cached_Simulator.py
-In the above file, the user will be asked to enter the details of cache L1 nd L2 (here, we used two levels of Cache named L1 and L2) such as block size, set associativity and number of blocks of cache.
+
+Simulation Procedure:-
+-
+
+1) The user will be asked to enter the details of cache L1 nd L2 (here, we used two levels of Cache named L1 and L2) which includes block size, set associativity and number of blocks for both the caches.
+
+2) The number of cycles, sorted array (for bubble_sort.asm as an input), number of stalls, number of memory stalls, raw form of cache are printed.
+
+3) Miss count and Hit count for caches L1 and L2 are also printed.
+
+4) We assumed that the write through doesn't bring any stall in the program, but when data is to be added in the memory, there is a write stall which costs about 200 cycles.
+
+Overall Simulation
+-
+
+Run the file named GUI.py which will show a desktop app. This is made using a library of Python, 'Tkinter'. The desktop app contains a few options such as Load File, Run File(only), Run File Step-by-Step, Run file and Show Memory and Cache, etc. which shows everything from all the phases on the display.
+
+
 
 By -----
 
