@@ -1,5 +1,5 @@
 import re
-# import pandas as pd
+import pandas as pd
 from Cache_interface import Cache
 
 reg = {"zero":0, "r0":0, "at":0, "v0":0, "v1":0, "a0":0, "a1":0, "a2":0, "a3":0, "t0":0, "t1":0, "t2":0, "t3":0, "t4":0, "t5":0, "t6":0, "t7":0,"s0":0, "s1":0, "s2":0, "s3":0 ,"s4":0 ,"s5":0, "s6":0, "s7":0, "t8":0, "t9":0, "k0":0, "k1":0, "gp":0, "sp":0, "s8":0, "ra":0}
@@ -23,8 +23,14 @@ wr_flag = False
 # wr_flag1 = False
 # wr_flag2 = False
 # initializing caches
-L1 = Cache(2,4,32,{})
-L2 = Cache(4,4,64,{})
+l1_block_size = 0
+l1_set_assoc = 0
+l1_blocks = 0
+l2_block_size = 0
+l2_set_assoc = 0
+l2_blocks = 0
+L1 = object()
+L2 = object()
 
 ins_type1 = ['add','sub','and','or','slt']
 ins_type2 = ['addi','andi','ori','sll','srl']
@@ -64,6 +70,15 @@ def reinitialize():
     global latch_e
     global latch_m
     global ins_queue
+    global l1_block_size
+    global l1_set_assoc
+    global l1_blocks
+    global l2_block_size
+    global l2_set_assoc
+    global l2_blocks
+    global L1
+    global L2
+
     reg = {"zero":0, "r0":0, "at":0, "v0":0, "v1":0, "a0":0, "a1":0, "a2":0, "a3":0, "t0":0, "t1":0, "t2":0, "t3":0, "t4":0, "t5":0, "t6":0, "t7":0,"s0":0, "s1":0, "s2":0, "s3":0 ,"s4":0 ,"s5":0, "s6":0, "s7":0, "t8":0, "t9":0, "k0":0, "k1":0, "gp":0, "sp":0, "s8":0, "ra":0}
     reg_flag = {"zero":['',''], "r0":['',''], "at":['',''], "v0":['',''], "v1":['',''], "a0":['',''], "a1":['',''], "a2":['',''], "a3":['',''], "t0":['',''], "t1":['',''], "t2":['',''], "t3":['',''], "t4":['',''], "t5":['',''], "t6":['',''], "t7":['',''],"s0":['',''], "s1":['',''], "s2":['',''], "s3":['',''] ,"s4":['',''] ,"s5":['',''], "s6":['',''], "s7":['',''], "t8":['',''], "t9":['',''], "k0":['',''], "k1":['',''], "gp":['',''], "sp":['',''], "s8":['',''], "ra":['','']}
     base_address = 0x10010000
@@ -87,6 +102,14 @@ def reinitialize():
     latch_e = 0
     latch_m = 0
     ins_queue = []
+    l1_block_size = 0
+    l1_set_assoc = 0
+    l1_blocks = 0
+    l2_block_size = 0
+    l2_set_assoc = 0
+    l2_blocks = 0
+    L1 = object()
+    L2 = object()
 
 def fileHandler(filename):
 
@@ -841,7 +864,7 @@ def Simulate():
 
     process = pipeline(instruction)
     print('Number of Cycles in total = '+str(process[1]))
-    #print_stages(process[0])
+    # print_stages(process[0])
     print('--------------------------------------')
     L1.print_cache()
     L2.print_cache()
@@ -855,11 +878,41 @@ def Simulate():
     print('Instructions per cycle = '+str(round((process[1]-stalls)/process[1],3)))
     print(data['.word'])
 
+    print('--------------------------------------')
+
+    print("For L1 Cache, Miss Count= " + str(L1.miss_count))
+    print("For L2 Cache, Miss Count= " + str(L2.miss_count))
+    print("For L1 Cache, Hit Count= " + str(L1.hit_count))
+    print("For L2 Cache, Hit Count= " + str(L2.hit_count))
+
     file = open("Cache.txt", 'w')
     file.write(str(L1.store_cache()))   
     file.write("\n")
     file.write(str(L2.store_cache()))
     file.close()
 
+def Cache_input():
+    global l1_block_size
+    global l1_set_assoc
+    global l1_blocks
+    global l2_block_size
+    global l2_set_assoc
+    global l2_blocks
+    global L1
+    global L2
+
+    l1_block_size = int(input("Enter the block size for L1 Cache: "))
+    l1_set_assoc = int(input("Enter the set associativity of L1 Cache: "))
+    l1_blocks = int(input("Enter the number of blocks in L1 Cache: "))
+
+    l2_block_size = int(input("Enter the block size for L2 Cache: "))
+    l2_set_assoc = int(input("Enter the set associativity of L2 Cache: "))
+    l2_blocks = int(input("Enter the number of blocks in L2 Cache: "))
+
+    L1 = Cache(l1_block_size, l1_set_assoc, l1_blocks, {})
+    L2 = Cache(l2_block_size, l2_set_assoc, l2_blocks, {})
+
 if __name__== "__main__":
+    Cache_input()
     Simulate()
+    

@@ -191,6 +191,7 @@ def show_cache():
         error_popup("Please load a file")   
     else:
 
+        Cache.Cache_input()
         Cache.Simulate()
 
         file = open('Cache.txt', 'r')

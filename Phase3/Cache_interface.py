@@ -3,9 +3,9 @@ import math
 class Cache:
 
     #miss_penalty = 0 #time to fetch_from cache to it's next level
-    miss_count = 0
+    # miss_count = 0
     #cache_lat = 0 #time taken to fetch from cache
-    hit_count = 0
+    # hit_count = 0
     #cache = {}
 
     def __init__(self,block_size,set_assoc,blocks,cache):
@@ -13,6 +13,8 @@ class Cache:
         self.blocks = blocks
         self.set_assoc = set_assoc
         self.cache = cache
+        self.miss_count = 0
+        self.hit_count = 0
         
         #print(block_size)
         for i in range(int(blocks/set_assoc)):

@@ -1,1 +1,1 @@
-/home/tapish/CO/Project/COproj/Phase1/trial.asm
+/home/tapish/CO/Project/COproj/Phase1/bubble_sort.asm
