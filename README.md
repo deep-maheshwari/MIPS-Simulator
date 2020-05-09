@@ -23,7 +23,7 @@ Simulation Procedure:-
 
 3) The cycle data is generated in an Excel Sheet which is modified and attached in Phase2/cycles.xlsx which gives the timeline of cycles being executed along with the stalls. Its screenshot is attached below:
 
-
+![image](https://user-images.githubusercontent.com/54976309/81482981-6d7e6a00-9258-11ea-86a5-8df9772d4ec5.png)
 
 
 Threaded Simulation (Optional):-
