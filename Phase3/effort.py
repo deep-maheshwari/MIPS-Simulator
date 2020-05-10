@@ -48,23 +48,23 @@ def take_inputs():
     inp.geometry('450x300')
 
     def transfer_values():
-        lst = [l1_block_size.get(), l1_set_assoc.get(), l1_blocks.get(), l2_block_size.get(), l2_set_assoc.get(), l2_blocks.get()]
-        # show_cache(lst)
-        print(lst)
+        lst = [int(size1_entry.get()), int(assoc1_entry.get()), int(blocks1_entry.get()), int(size2_entry.get()), int(assoc2_entry.get()), int(blocks2_entry.get())]
+        show_cache(lst)
+        # print(lst)
         
-    l1_block_size = IntVar()
-    l1_set_assoc = IntVar()
-    l1_blocks = IntVar()
-    l2_block_size = IntVar()
-    l2_set_assoc = IntVar()
-    l2_blocks = IntVar()
+    # l1_block_size = IntVar()
+    # l1_set_assoc = IntVar()
+    # l1_blocks = IntVar()
+    # l2_block_size = IntVar()
+    # l2_set_assoc = IntVar()
+    # l2_blocks = IntVar()
 
     size1 = Label(inp, text = 'L1 Block Size: ', fg = 'blue')
     size1.grid(row = 0, column = 0, pady = 5, padx = 10, sticky = 'w')
-
+    
     assoc1 = Label(inp, text = 'L1 Set Associativity: ', fg = 'blue')
     assoc1.grid(row = 1, column = 0, pady = 5, padx = 10, sticky = 'w')
-    
+
     blocks1 = Label(inp, text = 'L1 Number of Blocks: ', fg = 'blue')
     blocks1.grid(row = 2, column = 0, pady = 5, padx = 10, sticky = 'w')
 
@@ -77,30 +77,36 @@ def take_inputs():
     blocks2 = Label(inp, text = 'L2 Number of Blocks: ', fg = 'blue')
     blocks2.grid(row = 5, column = 0, pady = 5, padx = 10, sticky = 'w')
 
-    size1_entry = Entry(inp, textvariable = l1_block_size)
+    size1_entry = Entry(inp)
     size1_entry.grid(row = 0, column = 1, padx = 3, pady = 5)
     size1_entry.insert(0, '0')
+    size1_entry.focus_set()
 
-    assoc1_entry = Entry(inp, textvariable = l1_set_assoc)
+    assoc1_entry = Entry(inp)
     assoc1_entry.grid(row = 1, column = 1, padx = 3, pady = 5)
     assoc1_entry.insert(0, '0')
+    assoc1.focus_set()
 
-    blocks1_entry = Entry(inp, textvariable = l1_blocks)
+    blocks1_entry = Entry(inp)
     blocks1_entry.grid(row = 2, column = 1, padx = 3, pady = 5)
     blocks1_entry.insert(0, '0')
+    blocks1_entry.focus_set()
 
-    size2_entry = Entry(inp, textvariable = l2_block_size)
+    size2_entry = Entry(inp)
     size2_entry.grid(row = 3, column = 1, padx = 3, pady = 5)
     size2_entry.insert(0, '0')
+    size2_entry.focus_set()
 
-    assoc2_entry = Entry(inp, textvariable = l2_set_assoc)
+    assoc2_entry = Entry(inp)
     assoc2_entry.grid(row = 4, column = 1, padx = 3, pady = 5)
     assoc2_entry.insert(0, '0')
+    assoc2_entry.focus()
 
-    blocks2_entry = Entry(inp, textvariable = l2_blocks)
+    blocks2_entry = Entry(inp)
     blocks2_entry.grid(row = 5, column = 1, padx = 3, pady = 5)
     blocks2_entry.insert(0, '0')
-    
+    blocks2_entry.focus_set()
+
     ok = Button(inp, text = 'Done', width = 7, command = transfer_values)
     ok.grid(row = 6, column = 0, columnspan =2, pady = 10)
 
@@ -110,7 +116,8 @@ def take_inputs():
     inp.mainloop()
 
 def show_cache(details):
-    
+    print(details)
+
     Cache.GUI_cache_input(details)
     Cache.Simulate()
 
@@ -300,4 +307,20 @@ def show_cache(details):
 
     cache.mainloop()
 
-take_inputs()
+# def printtext():
+#     global e
+#     string = e.get() 
+#     print(string)  
+
+# from tkinter import *
+# root = Tk()
+
+# root.title('Name')
+
+# e = Entry(root)
+# e.pack()
+# e.focus_set()
+
+# b = Button(root,text='okay',command=printtext)
+# b.pack(side='bottom')
+# root.mainloop()
