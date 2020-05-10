@@ -46,6 +46,11 @@ latch_m = 0
 
 ins_queue = []
 
+def return_data():
+    lst = [L1.miss_count, L1.hit_count, L2.miss_count, L2.hit_count]
+    lst.append(data['.word'])
+    return lst
+
 def reinitialize():
     global reg
     global reg_flag
@@ -908,6 +913,27 @@ def Cache_input():
     l2_block_size = int(input("Enter the block size for L2 Cache: "))
     l2_set_assoc = int(input("Enter the set associativity of L2 Cache: "))
     l2_blocks = int(input("Enter the number of blocks in L2 Cache: "))
+
+    L1 = Cache(l1_block_size, l1_set_assoc, l1_blocks, {})
+    L2 = Cache(l2_block_size, l2_set_assoc, l2_blocks, {})
+
+def GUI_cache_input(details):
+    global l1_block_size
+    global l1_set_assoc
+    global l1_blocks
+    global l2_block_size
+    global l2_set_assoc
+    global l2_blocks
+    global L1
+    global L2
+
+    l1_block_size = details[0]
+    l1_set_assoc = details[1]
+    l1_blocks = details[2]
+
+    l2_block_size = details[3]
+    l2_set_assoc = details[4]
+    l2_blocks = details[5]
 
     L1 = Cache(l1_block_size, l1_set_assoc, l1_blocks, {})
     L2 = Cache(l2_block_size, l2_set_assoc, l2_blocks, {})
