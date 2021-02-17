@@ -4,9 +4,8 @@ from tkinter import ttk
 from functools import partial
 import Simulator_interface as Sim
 import sys
-sys.path.insert(1, '/home/tapish/CO/Project/COproj/Phase3')
+sys.path.insert(1, '../Phase3')
 import Cached_Simulator as Cache
-import effort as eff
 
 s = Sim.Simulator()
 
@@ -454,8 +453,20 @@ def show_cache(details):
     hits1 = Label(cache, text = 'L1 Hit Count: ' + str(Cache.return_data()[1]) + '        L2 Hit Count: ' + str(Cache.return_data()[3]), fg='blue', font = ('Times', 15))
     hits1.grid(row = 5, column = 0, sticky = 'w', pady = 10, padx = 5)
 
-    mm = Label(cache, text = 'Main memory: ' + str(Cache.return_data()[4]), fg = 'blue', font = ('Times', 15))
+    mm = Label(cache, text = 'Main memory: ' + str(Cache.return_data()[-1]), fg = 'blue', font = ('Times', 15))
     mm.grid(row = 6, column = 0, sticky = 'w', padx = 5, pady = 10)
+
+    cycles = Label(cache, text = 'Instructions per cycle: ' + Cache.return_data()[4], fg = 'blue', font = ('Times', 15))
+    cycles.grid(row = 7, column = 0, sticky = 'w', padx = 5, pady = 10)
+
+    mm_stalls = Label(cache, text = 'Number of memory stalls: ' + str(Cache.return_data()[5]), fg = 'blue', font = ('Times', 15))
+    mm_stalls.grid(row = 8, column = 0, sticky = 'w', padx = 5, pady = 10)
+
+    wr_stalls = Label(cache, text = 'Number of write stalls: ' + str(Cache.return_data()[6]), fg = 'blue', font = ('Times', 15))
+    wr_stalls.grid(row = 9, column = 0, sticky = 'w', padx = 5, pady = 10)
+
+    stalls = Label(cache, text = 'Total Stalls: ' + str(Cache.return_data()[7]), fg = 'blue', font = ('Times', 15))
+    stalls.grid(row = 10, column = 0, sticky = 'w', padx = 5, pady = 10)
 
     cache.mainloop()
 
