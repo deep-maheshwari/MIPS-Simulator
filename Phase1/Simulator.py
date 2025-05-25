@@ -1,6 +1,7 @@
 # Simulator for phase 1
 #instructions = ["add","sub","lw","sw","bne"]
 import re
+import os # Added for path manipulation
 
 reg = {"zero":0, "r0":0, "at":0, "v0":0, "v1":0, "a0":0, "a1":0, "a2":0, "a3":0, "t0":0, "t1":0, "t2":0, "t3":0, "t4":0, "t5":0, "t6":0, "t7":0,"s0":0, "s1":0, "s2":0, "s3":0 ,"s4":0 ,"s5":0, "s6":0, "s7":0, "t8":0, "t9":0, "k0":0, "k1":0, "gp":0, "sp":0, "s8":0, "ra":0}
 base_address = 0x10010000
@@ -191,6 +192,56 @@ def run_instruction(instruction,PC):
             reg3 = instruction[3].replace('$','')
             reg[reg1] = hex(int(reg[reg2],16) & int(reg[reg3],16))
             PC = PC + 1
+
+    elif instruction[0] == 'ori':
+        if len(instruction) != 4:
+            print(f"Error: ori instruction expects 3 operands, got {len(instruction)-1}")
+            PC += 1 
+        else:
+            rd = instruction[1].replace('$', '')
+            rs = instruction[2].replace('$', '')
+            try:
+                imm = int(instruction[3]) 
+            except ValueError:
+                print(f"Error: ori immediate value '{instruction[3]}' is not a valid integer.")
+                PC += 1
+                return PC # Return early if immediate is invalid
+
+            val_rs = 0 # Default for $zero or if rs is somehow not in reg
+            if rs != 'zero': # Check if rs is not $zero
+                 val_rs = reg.get(rs, 0) # Get value from reg, default to 0 if not found (though should exist)
+            
+            # Ensure val_rs is an integer before bitwise OR
+            if isinstance(val_rs, str) and val_rs.startswith('0x'):
+                val_rs = int(val_rs, 16)
+
+            reg[rd] = val_rs | imm 
+            PC += 1
+
+    elif instruction[0] == 'jr':
+        if len(instruction) != 2:
+            print(f"Error: jr instruction expects 1 operand, got {len(instruction)-1}")
+            PC += 1
+        else:
+            rs = instruction[1].replace('$', '')
+            jump_addr = reg.get(rs, 0) 
+
+            # Ensure jump_addr is an integer for comparison and use as PC
+            if isinstance(jump_addr, str) and jump_addr.startswith('0x'):
+                jump_addr = int(jump_addr, 16) # Convert hex string address if needed
+
+            if rs == 'ra' and jump_addr == 0 : # Standard way bubble_sort.asm ends (if $ra is 0)
+                                               # Or if $ra was never set and defaults to 0.
+                print(f"INFO: jr $ra encountered (value {jump_addr}), terminating program.")
+                PC = len(data_and_text['main']) # Set PC to end to terminate loop
+            elif jump_addr < 0 or jump_addr >= len(data_and_text['main']):
+                print(f"Error: jr to address {jump_addr} (from ${rs}) is out of instruction bounds (0-{len(data_and_text['main'])-1}). Halting.")
+                PC = len(data_and_text['main']) # Halt by setting PC to end
+            else:
+                PC = jump_addr
+    else:
+        print(f"Error: Unknown instruction encountered: {instruction[0]} at PC={PC}")
+        PC += 1 # Increment PC to avoid infinite loop on this unknown instruction
             
     return PC
 #result = re.match(r"\d+","34($s0)")
@@ -227,7 +278,15 @@ def read_instructions(instructions):
 
     return parsed_list
 
-instructions = read_instructions(fileHandler("C:/Users/Admin/Documents/4th semester/Computer Organisation/Lab_project/COproj/Phase1/bubble_sort.asm"))
+# Determine the correct path to bubble_sort.asm relative to this script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+asm_file_path = os.path.join(script_dir, "bubble_sort.asm")
+# If the script is run from repo root, and Phase1 is a subdir
+# asm_file_path_alt = os.path.join("Phase1", "bubble_sort.asm")
+# if not os.path.exists(asm_file_path) and os.path.exists(asm_file_path_alt):
+#    asm_file_path = asm_file_path_alt
+
+instructions = read_instructions(fileHandler(asm_file_path))
 data_and_text = {'data':[],'main':[]}
 
 pos_data = 0
@@ -297,25 +356,34 @@ print(data_and_text['data'])
 print(main)
 print(label_address)
 print()
-print('1.Run file')
-print('2.Run file step by step')
+# print('1.Run file') # Removed for automated execution
+# print('2.Run file step by step') # Removed for automated execution
 
-print('Choose one of the above option')
+# print('Choose one of the above option') # Removed for automated execution
 
-option = int(input())
+option = 1 # Set option to 1 for automated execution
 
 count = 0
 if(option==1):
 
-    while(PC!=len(data_and_text['main'])-1):
-        print(PC)
-        count+=1
-        PC = run_instruction(data_and_text['main'][PC],PC)
+    while(PC < len(data_and_text['main'])): # Corrected loop condition
+        # print(PC) # Optional: for debugging current PC value
+        current_instruction_details = data_and_text['main'][PC]
+        # print(f"Executing PC={PC}: {current_instruction_details}") # Debug print instruction
+        
+        PC = run_instruction(current_instruction_details, PC)
+        count += 1
 
-        if(PC>len(data_and_text['main'])):
-            print("Unexpected error occured.")
-            break
+
+        # The check PC > len(data_and_text['main']) is problematic if PC can be exactly len (for termination)
+        # The jr instruction now handles setting PC = len(data_and_text['main']) to terminate.
+        # If run_instruction returns PC >= len, loop should naturally terminate.
     
+    print(f"\n--- Execution Finished ---")
+    print(f"Total instructions simulated: {count}")
+    print(f"Final PC: {PC}") # Should be len(data_and_text['main']) if terminated by jr $ra
+    
+    print("\nFinal Register States:")
     for register in reg.keys():
         print(register+": "+str(reg[register]))
 

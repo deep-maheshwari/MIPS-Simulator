@@ -863,7 +863,7 @@ def Simulate():
     global ipc
 
     file = open("loaded_file.txt", "r")
-    file_address = file.read()
+    file_address = file.read().strip() # Added .strip() to remove trailing newline
 
     instructions = read_instructions(fileHandler(str(file_address)))
     ins_list(instructions,data_and_text,data,label_address,main)
@@ -944,6 +944,11 @@ def GUI_cache_input(details):
     L2 = Cache(l2_block_size, l2_set_assoc, l2_blocks, {})
 
 if __name__== "__main__":
-    Cache_input()
+    # Define default cache parameters
+    default_cache_details = [16, 2, 64, 32, 4, 128] 
+    # (L1 block size, L1 set associativity, L1 num blocks, L2 block size, L2 set associativity, L2 num blocks)
+    
+    # Call GUI_cache_input with default details
+    GUI_cache_input(default_cache_details)
     Simulate()
     
